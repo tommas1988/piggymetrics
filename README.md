@@ -259,7 +259,7 @@ If you'd like to build images yourself (with some changes in the code, for examp
 If you'd like to start applications in Intellij Idea you need to either use [EnvFile plugin](https://plugins.jetbrains.com/plugin/7861-envfile) or manually export environment variables listed in `.env` file (make sure they were exported: `printenv`)
 
 #### Important endpoints
-- http://localhost:80 - Gateway
+- http://localhost:8080 - Gateway
 - http://localhost:8761 - Eureka Dashboard
 - http://localhost:9000/hystrix - Hystrix Dashboard (Turbine stream link: `http://turbine-stream-service:8080/turbine/turbine.stream`)
 - http://localhost:15672 - RabbitMq management (default login/password: guest/guest)
