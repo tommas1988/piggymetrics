@@ -25,3 +25,10 @@ security:
 spring:
   rabbitmq:
     host: rabbitmq
+
+# TODO: move to a single config file
+  zipkin:
+    sender:
+      type: rabbit
+    rabbitmq:
+      queue: zipkin
