@@ -23,3 +23,9 @@ server:
 
 rates:
   url: https://api.exchangeratesapi.io
+
+# use apache http client to user proxyUser & proxyPassword system properties
+feign:
+  httpclient:
+    enabled: true
+    connectionTimeout: 20000

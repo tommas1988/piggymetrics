@@ -49,6 +49,7 @@ public class StatisticsServiceImpl implements StatisticsService {
 	 */
 	@Override
 	public DataPoint save(String accountName, Account account) {
+		log.info("statistic trace");
 
 		Instant instant = LocalDate.now().atStartOfDay()
 				.atZone(ZoneId.systemDefault()).toInstant();

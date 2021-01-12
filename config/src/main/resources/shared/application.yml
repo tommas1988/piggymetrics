@@ -32,3 +32,8 @@ spring:
       type: rabbit
     rabbitmq:
       queue: zipkin
+
+# for test purpose
+  sleuth:
+    sampler:
+      probability: 1
