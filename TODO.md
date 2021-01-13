@@ -1,2 +1,3 @@
 * maven import main version dependency
-* deploy on kubernetes 
+* do not let sleuth web resources
+* deploy on kubernetes
