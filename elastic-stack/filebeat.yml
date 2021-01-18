@@ -4,19 +4,17 @@
 filebeat.inputs:
 - type: log
   paths:
-  - "/var/log/piggymetrics/config-service.log"
-  #- "/var/log/piggymetrics/config-service.log*"
+  - "/var/log/piggymetrics/config-service.log*"
   fields_under_root: true
   fields:
-    service-name: config-service
+    service-name: 'config-service'
   multiline.type: pattern
   multiline.pattern: '^[[:space:]]+(at|\.{3})[[:space:]]+\b|^Caused by:'
   multiline.negate: false
   multiline.match: after
 - type: log
   paths:
-  - "/var/log/piggymetrics/registry-service.log"
-  #- "/var/log/piggymetrics/registry-service.log*"
+  - "/var/log/piggymetrics/registry-service.log*"
   fields_under_root: true
   fields:
     service-name: registry-service
@@ -26,7 +24,6 @@ filebeat.inputs:
   multiline.match: after
 - type: log
   paths:
-  - "/var/log/piggymetrics/gateway.log"
   - "/var/log/piggymetrics/gateway.log*"
   fields_under_root: true
   fields:
@@ -37,7 +34,6 @@ filebeat.inputs:
   multiline.match: after
 - type: log
   paths:
-  - "/var/log/piggymetrics/accunout-service.log"
   - "/var/log/piggymetrics/accunout-service.log*"
   fields_under_root: true
   fields:
@@ -48,7 +44,6 @@ filebeat.inputs:
   multiline.match: after
 - type: log
   paths:
-  - "/var/log/piggymetrics/auth-service.log"
   - "/var/log/piggymetrics/auth-service.log*"
   fields_under_root: true
   fields:
@@ -59,7 +54,6 @@ filebeat.inputs:
   multiline.match: after
 - type: log
   paths:
-  - "/var/log/piggymetrics/statistics-service.log"
   - "/var/log/piggymetrics/statistics-service.log*"
   fields_under_root: true
   fields:
@@ -71,7 +65,6 @@ filebeat.inputs:
 - type: log
   paths:
   - "/var/log/piggymetrics/notification-service.log*"
-  - "/var/log/piggymetrics/notification-service.log"
   fields_under_root: true
   fields:
     service-name: notification-service
@@ -79,6 +72,40 @@ filebeat.inputs:
   multiline.pattern: '^[[:space:]]+(at|\.{3})[[:space:]]+\b|^Caused by:'
   multiline.negate: false
   multiline.match: after
+
 output.elasticsearch:
   hosts: ["http://elasticsearch:9200"]
+  indices:
+  - index: 'config-service-%{+yyyy.MM.dd}'
+    when.equals:
+      service-name: 'config-service'
+  - index: 'registry-service-%{+yyyy.MM.dd}'
+    when.equals:
+      service-name: 'registry-service'
+  - index: 'gateway-%{+yyyy.MM.dd}'
+    when.equals:
+      service-name: 'gateway'
+  - index: 'account-service-%{+yyyy.MM.dd}'
+    when.equals:
+      service-name: 'account-service'
+  - index: 'auth-service-%{+yyyy.MM.dd}'
+    when.equals:
+      service-name: 'auth-service'
+  - index: 'statistics-service-%{+yyyy.MM.dd}'
+    when.equals:
+      service-name: 'statistics-service'
+  - index: 'notification-service-%{+yyyy.MM.dd}'
+    when.equals:
+      service-name: 'notification-service'
+
 setup.kibana.host: "http://kibana:5601"
+setup.ilm.enabled: false
+
+# setup.template.name: "piggymetrics"
+# setup.template.pattern: "*-service"
+# setup.template.enabled: false
+
+
+# processors:
+# - drop_fields:
+#     fields: ["input_type", "offset", "beat.name","beat.version","beat.hostname","input.type","prospector.type","log.file.path"]
