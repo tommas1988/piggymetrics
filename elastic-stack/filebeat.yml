@@ -1,7 +1,84 @@
+# regxp partten https://www.elastic.co/guide/en/beats/filebeat/current/regexp-support.html
+# java stack example  https://www.elastic.co/guide/en/beats/filebeat/current/multiline-examples.html
+# log rotation https://www.elastic.co/guide/en/beats/filebeat/current/file-log-rotation.html
 filebeat.inputs:
 - type: log
   paths:
-  - "/var/log/piggymetrics/*.log"
+  - "/var/log/piggymetrics/config-service.log"
+  #- "/var/log/piggymetrics/config-service.log*"
+  fields_under_root: true
+  fields:
+    service-name: config-service
+  multiline.type: pattern
+  multiline.pattern: '^[[:space:]]+(at|\.{3})[[:space:]]+\b|^Caused by:'
+  multiline.negate: false
+  multiline.match: after
+- type: log
+  paths:
+  - "/var/log/piggymetrics/registry-service.log"
+  #- "/var/log/piggymetrics/registry-service.log*"
+  fields_under_root: true
+  fields:
+    service-name: registry-service
+  multiline.type: pattern
+  multiline.pattern: '^[[:space:]]+(at|\.{3})[[:space:]]+\b|^Caused by:'
+  multiline.negate: false
+  multiline.match: after
+- type: log
+  paths:
+  - "/var/log/piggymetrics/gateway.log"
+  - "/var/log/piggymetrics/gateway.log*"
+  fields_under_root: true
+  fields:
+    service-name: gateway
+  multiline.type: pattern
+  multiline.pattern: '^[[:space:]]+(at|\.{3})[[:space:]]+\b|^Caused by:'
+  multiline.negate: false
+  multiline.match: after
+- type: log
+  paths:
+  - "/var/log/piggymetrics/accunout-service.log"
+  - "/var/log/piggymetrics/accunout-service.log*"
+  fields_under_root: true
+  fields:
+    service-name: account-service
+  multiline.type: pattern
+  multiline.pattern: '^[[:space:]]+(at|\.{3})[[:space:]]+\b|^Caused by:'
+  multiline.negate: false
+  multiline.match: after
+- type: log
+  paths:
+  - "/var/log/piggymetrics/auth-service.log"
+  - "/var/log/piggymetrics/auth-service.log*"
+  fields_under_root: true
+  fields:
+    service-name: auth-service
+  multiline.type: pattern
+  multiline.pattern: '^[[:space:]]+(at|\.{3})[[:space:]]+\b|^Caused by:'
+  multiline.negate: false
+  multiline.match: after
+- type: log
+  paths:
+  - "/var/log/piggymetrics/statistics-service.log"
+  - "/var/log/piggymetrics/statistics-service.log*"
+  fields_under_root: true
+  fields:
+    service-name: statistics-service
+  multiline.type: pattern
+  multiline.pattern: '^[[:space:]]+(at|\.{3})[[:space:]]+\b|^Caused by:'
+  multiline.negate: false
+  multiline.match: after
+- type: log
+  paths:
+  - "/var/log/piggymetrics/notification-service.log*"
+  - "/var/log/piggymetrics/notification-service.log"
+  fields_under_root: true
+  fields:
+    service-name: notification-service
+  multiline.type: pattern
+  multiline.pattern: '^[[:space:]]+(at|\.{3})[[:space:]]+\b|^Caused by:'
+  multiline.negate: false
+  multiline.match: after
 output.elasticsearch:
   hosts: ["http://elasticsearch:9200"]
 setup.kibana.host: "http://kibana:5601"
