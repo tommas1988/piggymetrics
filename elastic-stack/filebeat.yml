@@ -1,3 +1,5 @@
+## TODO: use elastic-ecs logging
+
 # regxp partten https://www.elastic.co/guide/en/beats/filebeat/current/regexp-support.html
 # java stack example  https://www.elastic.co/guide/en/beats/filebeat/current/multiline-examples.html
 # log rotation https://www.elastic.co/guide/en/beats/filebeat/current/file-log-rotation.html
@@ -17,7 +19,7 @@ filebeat.inputs:
   - "/var/log/piggymetrics/registry-service.log*"
   fields_under_root: true
   fields:
-    service-name: registry-service
+    service-name: 'registry-service'
   multiline.type: pattern
   multiline.pattern: '^[[:space:]]+(at|\.{3})[[:space:]]+\b|^Caused by:'
   multiline.negate: false
@@ -27,17 +29,17 @@ filebeat.inputs:
   - "/var/log/piggymetrics/gateway.log*"
   fields_under_root: true
   fields:
-    service-name: gateway
+    service-name: 'gateway'
   multiline.type: pattern
   multiline.pattern: '^[[:space:]]+(at|\.{3})[[:space:]]+\b|^Caused by:'
   multiline.negate: false
   multiline.match: after
 - type: log
   paths:
-  - "/var/log/piggymetrics/accunout-service.log*"
+  - "/var/log/piggymetrics/account-service.log*"
   fields_under_root: true
   fields:
-    service-name: account-service
+    service-name: 'account-service'
   multiline.type: pattern
   multiline.pattern: '^[[:space:]]+(at|\.{3})[[:space:]]+\b|^Caused by:'
   multiline.negate: false
@@ -47,7 +49,7 @@ filebeat.inputs:
   - "/var/log/piggymetrics/auth-service.log*"
   fields_under_root: true
   fields:
-    service-name: auth-service
+    service-name: 'auth-service'
   multiline.type: pattern
   multiline.pattern: '^[[:space:]]+(at|\.{3})[[:space:]]+\b|^Caused by:'
   multiline.negate: false
@@ -57,7 +59,7 @@ filebeat.inputs:
   - "/var/log/piggymetrics/statistics-service.log*"
   fields_under_root: true
   fields:
-    service-name: statistics-service
+    service-name: 'statistics-service'
   multiline.type: pattern
   multiline.pattern: '^[[:space:]]+(at|\.{3})[[:space:]]+\b|^Caused by:'
   multiline.negate: false
@@ -67,7 +69,7 @@ filebeat.inputs:
   - "/var/log/piggymetrics/notification-service.log*"
   fields_under_root: true
   fields:
-    service-name: notification-service
+    service-name: 'notification-service'
   multiline.type: pattern
   multiline.pattern: '^[[:space:]]+(at|\.{3})[[:space:]]+\b|^Caused by:'
   multiline.negate: false
@@ -105,7 +107,18 @@ setup.ilm.enabled: false
 # setup.template.pattern: "*-service"
 # setup.template.enabled: false
 
+## TODO: use logstash log4j plugin
+processors:
+- add_fields:
+    when:
+      regexp:
+        message: "[ERROR]"
+    fields:
+      log-type: error
 
-# processors:
-# - drop_fields:
-#     fields: ["input_type", "offset", "beat.name","beat.version","beat.hostname","input.type","prospector.type","log.file.path"]
+- add_fields:
+    when:
+      regexp:
+        message: "[WARN]"
+    fields:
+      log-type: warn
