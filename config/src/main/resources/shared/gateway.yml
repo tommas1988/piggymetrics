@@ -43,3 +43,6 @@ zuul:
 
 server:
   port: 8080
+
+logging:
+  config: 'etc/logback-spring.xml'

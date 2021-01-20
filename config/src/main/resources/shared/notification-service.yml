@@ -26,6 +26,8 @@ backup:
     attachment: backup.json
 
 spring:
+  application:
+    name: notification-service
   data:
     mongodb:
       host: notification-mongodb
@@ -48,3 +50,6 @@ spring:
             fallback: false
           ssl:
             enable: true
+
+logging:
+  config: 'etc/logback-spring.xml'

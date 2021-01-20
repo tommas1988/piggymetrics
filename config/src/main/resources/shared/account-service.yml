@@ -8,6 +8,8 @@ security:
       scope: server
 
 spring:
+  application:
+    name: account-service
   data:
     mongodb:
       host: account-mongodb
@@ -24,3 +26,6 @@ server:
 feign:
   hystrix:
     enabled: true
+
+logging:
+  config: 'etc/logback-spring.xml'

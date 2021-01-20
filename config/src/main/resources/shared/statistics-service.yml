@@ -8,6 +8,8 @@ security:
       scope: server
 
 spring:
+  application:
+    name: statistics-service
   data:
     mongodb:
       host: statistics-mongodb
@@ -29,3 +31,6 @@ feign:
   httpclient:
     enabled: true
     connectionTimeout: 20000
+
+logging:
+  config: 'etc/logback-spring.xml'

@@ -1,4 +1,6 @@
 spring:
+  application:
+    name: auth-service
   data:
     mongodb:
       host: auth-mongodb
@@ -11,3 +13,6 @@ server:
   servlet:
     context-path: /uaa
   port: 5000
+
+logging:
+  config: 'etc/logback-spring.xml'
