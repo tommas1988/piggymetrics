@@ -41,7 +41,7 @@ filebeat:
   privileged: true
   volumes:
     - ./filebeat.yml:/usr/share/filebeat/filebeat.yml
-    - ../logs:/var/log/piggymetrics
+    - ../logs:/var/log
   links:
     - kibana
     - elasticsearch

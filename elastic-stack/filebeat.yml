@@ -5,100 +5,22 @@
 # log rotation https://www.elastic.co/guide/en/beats/filebeat/current/file-log-rotation.html
 filebeat.inputs:
 - type: log
-  paths:
-  - "/var/log/piggymetrics/config-service.log*"
-  fields_under_root: true
+  paths: /var/log/piggymetrics.log.json*
+  json.keys_under_root: true
+  json.overwrite_keys: true
+  json.add_error_key: true
+  json.expand_keys: true
+
   fields:
-    service-name: 'config-service'
-  multiline.type: pattern
-  multiline.pattern: '^[[:space:]]+(at|\.{3})[[:space:]]+\b|^Caused by:'
-  multiline.negate: false
-  multiline.match: after
-- type: log
-  paths:
-  - "/var/log/piggymetrics/registry-service.log*"
-  fields_under_root: true
-  fields:
-    service-name: 'registry-service'
-  multiline.type: pattern
-  multiline.pattern: '^[[:space:]]+(at|\.{3})[[:space:]]+\b|^Caused by:'
-  multiline.negate: false
-  multiline.match: after
-- type: log
-  paths:
-  - "/var/log/piggymetrics/gateway.log*"
-  fields_under_root: true
-  fields:
-    service-name: 'gateway'
-  multiline.type: pattern
-  multiline.pattern: '^[[:space:]]+(at|\.{3})[[:space:]]+\b|^Caused by:'
-  multiline.negate: false
-  multiline.match: after
-- type: log
-  paths:
-  - "/var/log/piggymetrics/account-service.log*"
-  fields_under_root: true
-  fields:
-    service-name: 'account-service'
-  multiline.type: pattern
-  multiline.pattern: '^[[:space:]]+(at|\.{3})[[:space:]]+\b|^Caused by:'
-  multiline.negate: false
-  multiline.match: after
-- type: log
-  paths:
-  - "/var/log/piggymetrics/auth-service.log*"
-  fields_under_root: true
-  fields:
-    service-name: 'auth-service'
-  multiline.type: pattern
-  multiline.pattern: '^[[:space:]]+(at|\.{3})[[:space:]]+\b|^Caused by:'
-  multiline.negate: false
-  multiline.match: after
-- type: log
-  paths:
-  - "/var/log/piggymetrics/statistics-service.log*"
-  fields_under_root: true
-  fields:
-    service-name: 'statistics-service'
-  multiline.type: pattern
-  multiline.pattern: '^[[:space:]]+(at|\.{3})[[:space:]]+\b|^Caused by:'
-  multiline.negate: false
-  multiline.match: after
-- type: log
-  paths:
-  - "/var/log/piggymetrics/notification-service.log*"
-  fields_under_root: true
-  fields:
-    service-name: 'notification-service'
-  multiline.type: pattern
-  multiline.pattern: '^[[:space:]]+(at|\.{3})[[:space:]]+\b|^Caused by:'
-  multiline.negate: false
-  multiline.match: after
+    app-name: 'piggymetrics'
 
 output.elasticsearch:
   hosts: ["http://elasticsearch:9200"]
   indices:
-  - index: 'config-service-%{+yyyy.MM.dd}'
+  - index: 'piggymetrics-%{+yyyy.MM.dd}'
     when.equals:
-      service-name: 'config-service'
-  - index: 'registry-service-%{+yyyy.MM.dd}'
-    when.equals:
-      service-name: 'registry-service'
-  - index: 'gateway-%{+yyyy.MM.dd}'
-    when.equals:
-      service-name: 'gateway'
-  - index: 'account-service-%{+yyyy.MM.dd}'
-    when.equals:
-      service-name: 'account-service'
-  - index: 'auth-service-%{+yyyy.MM.dd}'
-    when.equals:
-      service-name: 'auth-service'
-  - index: 'statistics-service-%{+yyyy.MM.dd}'
-    when.equals:
-      service-name: 'statistics-service'
-  - index: 'notification-service-%{+yyyy.MM.dd}'
-    when.equals:
-      service-name: 'notification-service'
+      fields:
+        app-name: 'piggymetrics'
 
 setup.kibana.host: "http://kibana:5601"
 setup.ilm.enabled: false
@@ -106,19 +28,3 @@ setup.ilm.enabled: false
 # setup.template.name: "piggymetrics"
 # setup.template.pattern: "*-service"
 # setup.template.enabled: false
-
-## TODO: use logstash log4j plugin
-processors:
-- add_fields:
-    when:
-      regexp:
-        message: "[ERROR]"
-    fields:
-      log-type: error
-
-- add_fields:
-    when:
-      regexp:
-        message: "[WARN]"
-    fields:
-      log-type: warn
