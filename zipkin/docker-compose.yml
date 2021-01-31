@@ -1,0 +1,24 @@
+zipkin:
+  image: openzipkin/zipkin
+  privileged: true
+  environment:
+    STORAGE_TYPE: elasticsearch
+    ES_HOSTS: 'http://elasticsearch:9200'
+    RABBIT_QUEUE: zipkin
+    RABBIT_ADDRESSES: 'rabbitmq:5672'
+  restart: always
+  ports:
+  - 9411:9411
+  links:
+  - elasticsearch
+  - rabbitmq
+
+zipkin-dependencies:
+  image: openzipkin/zipkin-dependencies
+  privileged: true
+  environment:
+    STORAGE_TYPE: elasticsearch
+    ES_HOSTS: 'http://elasticsearch:9200'
+  restart: always
+  links:
+  - elasticsearch

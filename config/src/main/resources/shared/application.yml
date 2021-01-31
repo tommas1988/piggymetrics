@@ -1,5 +1,5 @@
 logging:
-  file: 'logs/piggymetrics.log'
+  file: 'logs/service.log'
   level:
     org.springframework.security: INFO
 

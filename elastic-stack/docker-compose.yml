@@ -39,6 +39,7 @@ kibana:
 filebeat:
   image: docker.elastic.co/beats/filebeat:7.10.1
   privileged: true
+  restart: always
   volumes:
     - ./filebeat.yml:/usr/share/filebeat/filebeat.yml
     - ../logs:/var/log
