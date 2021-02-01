@@ -1,81 +1,91 @@
-elasticsearch:
-   image: elasticsearch:7.10.1
-   privileged: true
-   environment:
-     discovery.type: single-node
-   restart: always
-   # log_opt:
-   #    max-size: "10m"
-   #    max-file: "10"
-   ports:
-      - 9200:9200
-   # volumes:
-   #    - ./data/elasticsearch:/usr/share/elasticsearch/data
+version: '2.2'
+services:
+  cerebro:
+    image: lmenezes/cerebro:0.9.3
+    container_name: cerebro
+    ports:
+    - 9000:9000
+    command:
+    - -Dhosts.0.host=http://elasticsearch:9200
+    networks:
+    - es7net
 
-# logstash:
-#    build: logstash
-#    restart: always
-#    log_opt:
-#       max-size: "10m"
-#       max-file: "10"
-#    command: logstash -f /config-dir/logstash.conf
-#    ports:
-#      - 5044:5044
-#    links:
-#      - elasticsearch
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
+    container_name: es7_01
+    environment:
+    - cluster.name=piggymetrics-es
+    - node.name=es7_01
+    - bootstrap.memory_lock=true
+    - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    - discovery.seed_hosts=es7_01,es7_02
+    - cluster.initial_master_nodes=es7_01,es7_02
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+    - es7data1:/usr/share/elasticsearch/data
+    ports:
+    - 9200:9200
+    networks:
+    - es7net
 
-kibana:
-   image: kibana:7.10.1
-   privileged: true
-   restart: always
-   # log_opt:
-   #    max-size: "10m"
-   #    max-file: "10"
-   ports:
-      - 5601:5601
-   links:
-      - elasticsearch
+  elasticsearch2:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.10.1
+    container_name: es7_02
+    environment:
+    - cluster.name=piggymetrics-es
+    - node.name=es7_02
+    - bootstrap.memory_lock=true
+    - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    - discovery.seed_hosts=es7_01,es7_02
+    - cluster.initial_master_nodes=es7_01,es7_02
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    volumes:
+    - es7data2:/usr/share/elasticsearch/data
+    networks:
+    - es7net
 
-filebeat:
-  image: docker.elastic.co/beats/filebeat:7.10.1
-  privileged: true
-  restart: always
-  volumes:
-    - ./filebeat.yml:/usr/share/filebeat/filebeat.yml
-    - ../logs:/var/log
-  links:
-    - kibana
-    - elasticsearch
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.10.1
+    container_name: kibana7
+    environment:
+    - I18N_LOCALE=zh-CN
+    - XPACK_GRAPH_ENABLED=true
+    - TIMELION_ENABLED=true
+    - XPACK_MONITORING_COLLECTION_ENABLED="true"
+    ports:
+    - 5601:5601
+    networks:
+    - es7net
 
-zipkin:
-  image: openzipkin/zipkin
-  privileged: true
-  environment:
-    STORAGE_TYPE: elasticsearch
-    ES_HOSTS: 'http://elasticsearch:9200'
-    RABBIT_QUEUE: zipkin
-    RABBIT_ADDRESSES: 'rabbitmq:5672'
-  restart: always
-  ports:
-  - 9411:9411
-  links:
-  - elasticsearch
-  - rabbitmq
+# filebeat:
+#   image: docker.elastic.co/beats/filebeat:7.10.1
+#   privileged: true
+#   restart: always
+#   volumes:
+#     - ./filebeat.yml:/usr/share/filebeat/filebeat.yml
+#     - ../logs:/var/log
+#   links:
+#     - kibana
+#     - elasticsearch
 
-zipkin-dependencies:
-  image: openzipkin/zipkin-dependencies
-  privileged: true
-  environment:
-    STORAGE_TYPE: elasticsearch
-    ES_HOSTS: 'http://elasticsearch:9200'
-  restart: always
-  links:
-  - elasticsearch
+volumes:
+  es7data1:
+    driver: local
+  es7data2:
+    driver: local
 
-rabbitmq:
-  image: 'rabbitmq:3-management'
-  privileged: true
-  restart: always
-  ports:
-  - 15672:15672
-  - 5672:5672
+networks:
+  es7net:
+    driver: bridge
