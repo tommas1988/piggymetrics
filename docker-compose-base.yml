@@ -1,0 +1,5 @@
+version: '2.2'
+
+networks:
+  pm-net:
+    driver: bridge

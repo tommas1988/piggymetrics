@@ -1,0 +1,17 @@
+version: '2.2'
+services:
+  config:
+    build: config
+    container_name: pm-config
+    privileged: true
+    mem_limit: 400m
+    mem_reservation: 300m
+    cpu_count: 1
+    environment:
+      CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
+    volumes:
+    - ./etc/logback-spring.xml:/etc/logback-spring.xml
+    ports:
+      - 8888:8888
+    networks:
+    - pm-net

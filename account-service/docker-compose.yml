@@ -1,0 +1,23 @@
+version: '2.2'
+services:
+  account-service:
+    build: account-service
+    container_name: pm-account-service
+    privileged: true
+    environment:
+      CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
+      ACCOUNT_SERVICE_PASSWORD: $ACCOUNT_SERVICE_PASSWORD
+      MONGODB_PASSWORD: $MONGODB_PASSWORD
+    restart: always
+    mem_limit: 400m
+    mem_reservation: 300m
+    cpu_count: 1
+    depends_on:
+      config:
+        condition: service_healthy
+    volumes:
+    - ./etc/logback-spring.xml:/etc/logback-spring.xml
+    ports:
+    - 6000:6000
+    networks:
+    - pm-net

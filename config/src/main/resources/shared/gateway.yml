@@ -42,7 +42,7 @@ zuul:
         sensitiveHeaders:
 
 server:
-  port: 8080
+  port: 4000
 
 logging:
   config: 'etc/logback-spring.xml'

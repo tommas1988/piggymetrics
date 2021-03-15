@@ -1,0 +1,19 @@
+version: '2.2'
+services:
+  registry:
+    build: registry
+    container_name: pm-registry
+    privileged: true
+    mem_limit: 400m
+    mem_reservation: 300m
+    cpu_count: 1
+    environment:
+      CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
+    restart: always
+    ports:
+    - 8761:8761
+    depends_on:
+      config:
+        condition: service_healthy
+    networks:
+    - pm-net

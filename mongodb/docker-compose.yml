@@ -1,0 +1,30 @@
+version: '2.2'
+services:
+  auth-mongodb:
+    build: mongodb
+    container_name: pm-auth-mongodb
+    ports:
+    - 25000:27017
+    networks:
+    - pm-net
+  account-mongodb:
+    build: mongodb
+    container_name: pm-account-mongodb
+    ports:
+    - 26000:27017
+    networks:
+    - pm-net
+  statistics-mongodb:
+    build: mongodb
+    container_name: pm-statistics-mongodb
+    ports:
+    - 27000:27017
+    networks:
+    - pm-net
+  notification-mongodb:
+    build: mongodb
+    container_name: pm-notification-mongodb
+    ports:
+    - 28000:27017
+    networks:
+    - pm-net

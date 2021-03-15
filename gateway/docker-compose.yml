@@ -1,0 +1,19 @@
+version: '2.2'
+services:
+  gateway:
+    build: gateway
+    container_name: pm-gateway
+    privileged: true
+    mem_limit: 400m
+    mem_reservation: 300m
+    cpu_count: 1
+    environment:
+      CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
+    restart: always
+    depends_on:
+      config:
+        condition: service_healthy
+    ports:
+    - 8080:4000
+    networks:
+    - pm-net

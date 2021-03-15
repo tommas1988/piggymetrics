@@ -1,7 +1,12 @@
-rabbitmq:
-  image: 'rabbitmq:3-management'
-  privileged: true
-  restart: always
-  ports:
-  - 15672:15672
-  - 5672:5672
+version: '2.2'
+services:
+  rabbitmq:
+    image: 'rabbitmq:3-management'
+    container_name: pm-rabbitmq
+    privileged: true
+    restart: always
+    ports:
+    - 15672:15672
+    - 5672:5672
+    networks:
+    - pm-net

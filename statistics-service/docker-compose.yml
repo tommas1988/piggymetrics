@@ -1,0 +1,21 @@
+version: '2.2'
+services:
+  statistics-service:
+    build: statistics-service
+    container_name: pm-statistics-service
+    privileged: true
+    mem_limit: 400m
+    mem_reservation: 300m
+    cpu_count: 1
+    environment:
+      CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
+      MONGODB_PASSWORD: $MONGODB_PASSWORD
+      STATISTICS_SERVICE_PASSWORD: $STATISTICS_SERVICE_PASSWORD
+    restart: always
+    depends_on:
+      config:
+        condition: service_healthy
+    ports:
+    - 7000:7000
+    networks:
+    - pm-net

@@ -1,0 +1,17 @@
+version: '2.2'
+services:
+  monitoring:
+    build: monitoring
+    container_name: pm-monitoring
+    privileged: true
+    mem_limit: 400m
+    mem_reservation: 300m
+    cpu_count: 1
+    environment:
+      CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
+    restart: always
+    depends_on:
+      config:
+        condition: service_healthy
+    networks:
+    - pm-net
