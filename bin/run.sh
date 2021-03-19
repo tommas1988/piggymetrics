@@ -7,14 +7,23 @@ declare -g -r -A SERVICE_COMPOSE_FILE_MAP=(
     ['mongodb']='mongodb/docker-compose.yml'
     ['rabbitmq']='rabbitmq/docker-compose.yml'
     ['config']='config/docker-compose.yml'
+    ['config-filebeat']='config/docker-compose-filebeat.yml'
     ['registry']='registry/docker-compose.yml'
+    ['registry-filebeat']='registry/docker-compose-filebeat.yml'
     ['gateway']='gateway/docker-compose.yml'
+    ['gateway-filebeat']='gateway/docker-compose-filebeat.yml'
     ['account-service']='account-service/docker-compose.yml'
+    ['account-service-filebeat']='account-service/docker-compose-filebeat.yml'
     ['auth-service']='auth-service/docker-compose.yml'
+    ['auth-service-filebeat']='auth-service/docker-compose-filebeat.yml'
     ['notification-service']='notification-service/docker-compose.yml'
+    ['notification-service-filebeat']='notification-service/docker-compose-filebeat.yml'
     ['statistics-service']='statistics-service/docker-compose.yml'
+    ['statistics-service-filebeat']='statistics-service/docker-compose-filebeat.yml'
     ['turbine-stream-service']='turbine-stream-service/docker-compose.yml'
+    ['turbine-stream-service-filebeat']='turbine-stream-service/docker-compose-filebeat.yml'
     ['monitoring']='monitoring/docker-compose.yml'
+    ['monitoring-filebeat']='monitoring/docker-compose-filebeat.yml'
 )
 
 # serivce with dependencies

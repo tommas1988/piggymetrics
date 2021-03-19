@@ -1,0 +1,24 @@
+version: '2.2'
+services:
+  config:
+    volumes:
+    - ./etc/logback-spring.xml:/var/piggymetrics/logback-spring.xml
+    - config-log:/var/log/piggymetrics
+
+  config-filebeat:
+    image: docker.elastic.co/beats/filebeat:7.10.1
+    privileged: true
+    restart: always
+    volumes:
+    - ./config/filebeat.yml:/usr/share/filebeat/filebeat.yml
+    - config-log:/var/log/piggymetrics
+    links:
+    - elasticsearch
+    networks:
+      - pm-net
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+
+volumes:
+  config-log:

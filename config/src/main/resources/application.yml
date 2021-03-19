@@ -16,5 +16,12 @@ server:
   port: 8888
 
 logging:
-  config: 'etc/logback-spring.xml'
-  file: 'logs/piggymetrics.log'
+  config: '/var/piggymetrics/logback-spring.xml'
+  file: '/var/log/piggymetrics/app.log'
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include:
+        - '*'

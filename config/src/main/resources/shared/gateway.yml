@@ -43,6 +43,3 @@ zuul:
 
 server:
   port: 4000
-
-logging:
-  config: 'etc/logback-spring.xml'

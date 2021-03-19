@@ -13,6 +13,3 @@ server:
   servlet:
     context-path: /uaa
   port: 5000
-
-logging:
-  config: 'etc/logback-spring.xml'

@@ -1,5 +1,6 @@
 logging:
-  file: 'logs/service.log'
+  config: '/var/piggymetrics/logback-spring.xml'
+  file: '/var/log/piggymetrics/app.log'
   level:
     org.springframework.security: INFO
 

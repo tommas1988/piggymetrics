@@ -31,6 +31,3 @@ feign:
   httpclient:
     enabled: true
     connectionTimeout: 20000
-
-logging:
-  config: 'etc/logback-spring.xml'

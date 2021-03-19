@@ -26,6 +26,3 @@ server:
 feign:
   hystrix:
     enabled: true
-
-logging:
-  config: 'etc/logback-spring.xml'

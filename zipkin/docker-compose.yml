@@ -14,6 +14,9 @@ services:
    - 9411:9411
    networks:
    - pm-net
+   depends_on:
+      elasticsearch:
+        condition: service_healthy
    links:
    - elasticsearch
    - rabbitmq
@@ -29,4 +32,4 @@ services:
    networks:
    - pm-net
    links:
-   - elasticsearch
+   - zipkin

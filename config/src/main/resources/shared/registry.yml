@@ -4,6 +4,3 @@ spring:
 
 server:
   port: 8761
-
-logging:
-  config: 'etc/logback-spring.xml'

@@ -50,6 +50,3 @@ spring:
             fallback: false
           ssl:
             enable: true
-
-logging:
-  config: 'etc/logback-spring.xml'
