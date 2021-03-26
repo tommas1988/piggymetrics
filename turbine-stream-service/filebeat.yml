@@ -6,6 +6,7 @@ filebeat.inputs:
   json.overwrite_keys: true
   json.add_error_key: true
   json.expand_keys: true
+  close_inactive: 1h
 # TODO： annotation or field
   fields:
    service-name: 'turbine-stream-service'
@@ -14,6 +15,7 @@ filebeat.inputs:
 - type: log
   paths:
   - "/var/log/piggymetrics/gc.log*"
+  close_inactive: 1h
 # TODO： annotation or field
   fields:
    service-name: 'turbine-stream-service'
