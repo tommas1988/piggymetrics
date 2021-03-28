@@ -2,9 +2,8 @@ package com.piggymetrics.zipkinapm;
 
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 
+// TODO: rename
 abstract public class BeanFactoryPostProcessorConfiguration implements InstrumentationConfiguration {
-    abstract public boolean canConfig();
-
     private ConfigurableListableBeanFactory beanFactory;
 
     public ConfigurableListableBeanFactory getBeanFactory() {
