@@ -10,7 +10,6 @@ public class ZipkinApmBeanFactoryPostProcessor implements BeanFactoryPostProcess
 
     public ZipkinApmBeanFactoryPostProcessor() {
         candidates = new BeanFactoryPostProcessorConfiguration[] {
-                new MongodbConfiguration(),
         };
     }
 
@@ -21,9 +20,5 @@ public class ZipkinApmBeanFactoryPostProcessor implements BeanFactoryPostProcess
 
     @Override
     public void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory) throws BeansException {
-        for (BeanFactoryPostProcessorConfiguration configuration : candidates) {
-            if (configuration.canConfig())
-                configuration.config();
-        }
     }
 }

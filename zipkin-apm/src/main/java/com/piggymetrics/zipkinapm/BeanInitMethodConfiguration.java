@@ -6,15 +6,17 @@ import org.springframework.beans.factory.support.RootBeanDefinition;
 import net.sf.cglib.core.DefaultNamingPolicy;
 
 import java.lang.reflect.Method;
+import java.util.List;
 
 // TODO: rename
 abstract public class BeanInitMethodConfiguration extends BeanFactoryPostProcessorConfiguration {
-    abstract protected RootBeanDefinition getTargetBeanDefinition(ConfigurableListableBeanFactory beanFactory);
+    abstract protected List<RootBeanDefinition> getTargetBeanDefinitions(ConfigurableListableBeanFactory beanFactory);
     // TODO: rename
     abstract protected Class getZipkinApmInitMethodCallback();
 
     private static final String DEFAULT_INIT_METHOD_NAME = "enableZipkinApm";
 
+    // TODO: rename
     public interface ZipkinApmInitMethod {
         void enableZipkinApm();
     }
@@ -66,32 +68,32 @@ abstract public class BeanInitMethodConfiguration extends BeanFactoryPostProcess
 
     @Override
     public void config() {
-        RootBeanDefinition bd = getTargetBeanDefinition(getBeanFactory());
+        for (RootBeanDefinition bd : getTargetBeanDefinitions(getBeanFactory())) {
+            Enhancer enhancer = new Enhancer();
+            enhancer.setNamingPolicy(new DefaultNamingPolicy() {
+                @Override
+                protected String getTag() {
+                    return "ByZipkinApm";
+                }
+            });
+            enhancer.setUseFactory(false);
+            enhancer.setSuperclass(bd.getBeanClass());
+            // enhancer.setStrategy();
 
-        Enhancer enhancer = new Enhancer();
-        enhancer.setNamingPolicy(new DefaultNamingPolicy() {
-            @Override
-            protected String getTag() {
-                return "ByZipkinApm";
+            InitMethodCallbackFilter callbackFilter;
+            String originInitMethodName = bd.getInitMethodName();
+            if (originInitMethodName == null) {
+                enhancer.setInterfaces(new Class[] { ZipkinApmEnabledInitMethod.class });
+                bd.setInitMethodName(DEFAULT_INIT_METHOD_NAME);
+                callbackFilter = new InitMethodCallbackFilter(DEFAULT_INIT_METHOD_NAME, getZipkinApmInitMethodCallback());
+            } else {
+                callbackFilter = new InitMethodCallbackFilter(originInitMethodName, getZipkinApmInitMethodCallback());
             }
-        });
-        enhancer.setUseFactory(false);
-        enhancer.setSuperclass(bd.getBeanClass());
-        // enhancer.setStrategy();
 
-        InitMethodCallbackFilter callbackFilter;
-        String originInitMethodName = bd.getInitMethodName();
-        if (originInitMethodName == null) {
-            enhancer.setInterfaces(new Class[] { ZipkinApmEnabledInitMethod.class });
-            bd.setInitMethodName(DEFAULT_INIT_METHOD_NAME);
-            callbackFilter = new InitMethodCallbackFilter(DEFAULT_INIT_METHOD_NAME, getZipkinApmInitMethodCallback());
-        } else {
-            callbackFilter = new InitMethodCallbackFilter(originInitMethodName, getZipkinApmInitMethodCallback());
+            enhancer.setCallbackFilter(callbackFilter);
+            enhancer.setCallbackTypes(callbackFilter.getCallbackTypes());
+
+            bd.setBeanClass(enhancer.createClass());
         }
-
-        enhancer.setCallbackFilter(callbackFilter);
-        enhancer.setCallbackTypes(callbackFilter.getCallbackTypes());
-
-        bd.setBeanClass(enhancer.createClass());
     }
 }
