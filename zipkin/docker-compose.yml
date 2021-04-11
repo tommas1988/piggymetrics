@@ -2,7 +2,7 @@ version: '2.2'
 services:
  zipkin:
    image: openzipkin/zipkin
-   container_name: pm_zipkin
+   container_name: pm-zipkin
    privileged: true
    environment:
      STORAGE_TYPE: elasticsearch
@@ -23,7 +23,7 @@ services:
 
  zipkin-dependencies:
    image: openzipkin/zipkin-dependencies
-   container_name: pm_zipkin-dependencies
+   container_name: pm-zipkin-dependencies
    privileged: true
    environment:
      STORAGE_TYPE: elasticsearch

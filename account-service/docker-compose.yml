@@ -9,8 +9,8 @@ services:
       ACCOUNT_SERVICE_PASSWORD: $ACCOUNT_SERVICE_PASSWORD
       MONGODB_PASSWORD: $MONGODB_PASSWORD
     restart: always
-    mem_limit: 400m
-    mem_reservation: 300m
+    # mem_limit: 400m
+    # mem_reservation: 300m
     cpu_count: 1
     depends_on:
       config:

@@ -121,7 +121,9 @@ function main()
 
 function usage()
 {
-    echo <<EOF
+    # heredoc 是一种重定向类型，它允许您将多行输入传递给命令
+    # 可以与 tee，cat 命令结合使用，不能与 echo 使用
+    cat <<EOF
 run this app with docker-compose.
     Options
         -s SERVICE_LIST run specified SERVICE_LIST
