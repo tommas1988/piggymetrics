@@ -1,16 +1,21 @@
-package com.piggymetrics.zipkinapm.autoconfig;
+package com.piggymetrics.zipkinapm.config;
 
 import brave.Tracing;
-import brave.baggage.CorrelationScopeConfig;
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.Propagation;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.util.StringUtils;
 import zipkin2.reporter.Sender;
 import zipkin2.reporter.brave.AsyncZipkinSpanHandler;
 import zipkin2.reporter.brave.ZipkinSpanHandler;
+import zipkin2.reporter.okhttp3.OkHttpSender;
 
-// TODO: use a @EnableConfigurationProperties to get values
+@Configuration
+@EnableConfigurationProperties(ZipkinApmProperties.class)
 public class TracingAutoConfiguration {
     /** Allows log patterns to use {@code %{traceId}} {@code %{spanId}} and {@code %{userName}} */
     /*@Bean
@@ -35,9 +40,9 @@ public class TracingAutoConfiguration {
 
     /** Configuration for how to send spans to Zipkin */
     @Bean
-    Sender sender(
-            @Value("${zipkin.baseUrl:http://127.0.0.1:9411}/api/v2/spans") String zipkinEndpoint) {
-        return OkHttpSender.create(zipkinEndpoint);
+    @ConditionalOnProperty(prefix = "zipkin-apm", name = {"okHttpSender", "zipkinUrl"})
+    Sender sender(ZipkinApmProperties zipkinApmConfig) {
+        return OkHttpSender.create(zipkinApmConfig.getZipkinUrl());
     }
 
     /** Configuration for how to buffer spans into messages for Zipkin */
@@ -46,16 +51,18 @@ public class TracingAutoConfiguration {
     }
 
     @Bean
-    Tracing tracing(@Value("${brave.localServiceName:${spring.application.name}}") String serviceName,
-                    @Value("${brave.supportsJoin:true}") boolean supportsJoin,
-                    @Value("${brave.traceId128Bit:false}") boolean traceId128Bit,
+    Tracing tracing(@Value("${spring.application.name}") String serviceName,
+                    ZipkinApmProperties zipkinApmConfig,
                     Propagation.Factory propagationFactory,
                     CurrentTraceContext currentTraceContext,
                     ZipkinSpanHandler zipkinSpanHandler) {
+        if (StringUtils.isEmpty(serviceName)) {
+            serviceName = zipkinApmConfig.getServiceName();
+        }
         return Tracing.newBuilder()
                 .localServiceName(serviceName)
-                .supportsJoin(supportsJoin)
-                .traceId128Bit(traceId128Bit)
+                .supportsJoin(zipkinApmConfig.isSupportsJoin())
+                .traceId128Bit(zipkinApmConfig.isTraceId128Bit())
                 .propagationFactory(propagationFactory)
                 .currentTraceContext(currentTraceContext)
                 .addSpanHandler(zipkinSpanHandler).build();
