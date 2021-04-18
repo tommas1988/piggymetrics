@@ -1,8 +1,11 @@
 package com.piggymetrics.zipkinapm.config;
 
 import brave.Tracing;
+import brave.http.HttpTracing;
+import brave.propagation.B3Propagation;
 import brave.propagation.CurrentTraceContext;
 import brave.propagation.Propagation;
+import brave.propagation.ThreadLocalCurrentTraceContext;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -24,19 +27,22 @@ public class TracingAutoConfiguration {
                 .add(CorrelationScopeConfig.SingleCorrelationField.create(USER_NAME)).build();
     }*/
 
-    /** Propagates trace context between threads. */
-    /*@Bean CurrentTraceContext currentTraceContext(CurrentTraceContext.ScopeDecorator correlationScopeDecorator) {
-        return ThreadLocalCurrentTraceContext.newBuilder()
-                .addScopeDecorator(correlationScopeDecorator)
-                .build();
-    }*/
+    @Bean
+    CurrentTraceContext currentTraceContext(CurrentTraceContext.ScopeDecorator correlationScopeDecorator) {
+        CurrentTraceContext.Builder builder = ThreadLocalCurrentTraceContext.newBuilder();
+        if (correlationScopeDecorator != null) {
+            builder.addScopeDecorator(correlationScopeDecorator);
+        }
+        return builder.build();
+    }
 
-    /** Configures propagation for {@link #USER_NAME}, using the remote header "user_name" */
-    /*@Bean Propagation.Factory propagationFactory() {
-        return BaggagePropagation.newFactoryBuilder(B3Propagation.FACTORY)
+    @Bean
+    Propagation.Factory propagationFactory() {
+        /*return BaggagePropagation.newFactoryBuilder(B3Propagation.FACTORY)
                 .add(SingleBaggageField.newBuilder(USER_NAME).addKeyName("user_name").build())
-                .build();
-    }*/
+                .build();*/
+        return B3Propagation.FACTORY;
+    }
 
     /** Configuration for how to send spans to Zipkin */
     @Bean
@@ -46,7 +52,8 @@ public class TracingAutoConfiguration {
     }
 
     /** Configuration for how to buffer spans into messages for Zipkin */
-    @Bean AsyncZipkinSpanHandler zipkinSpanHandler(Sender sender) {
+    @Bean
+    AsyncZipkinSpanHandler zipkinSpanHandler(Sender sender) {
         return AsyncZipkinSpanHandler.create(sender);
     }
 
@@ -66,5 +73,11 @@ public class TracingAutoConfiguration {
                 .propagationFactory(propagationFactory)
                 .currentTraceContext(currentTraceContext)
                 .addSpanHandler(zipkinSpanHandler).build();
+    }
+
+    /** Decides how to name and tag spans. By default they are named the same as the http method. */
+    @Bean
+    HttpTracing httpTracing(Tracing tracing) {
+        return HttpTracing.create(tracing);
     }
 }

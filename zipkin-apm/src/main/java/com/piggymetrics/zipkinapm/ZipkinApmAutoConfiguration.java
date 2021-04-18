@@ -32,8 +32,7 @@ public class ZipkinApmAutoConfiguration {
     @ConditionalOnClass(HttpClient.class)
     @ConditionalOnBean(type = "org.apache.http.impl.client.HttpClientBuilder")
     public HttpClientBuilder apacheHttpClientBuilder() {
-        return TracingHttpClientBuilder.create()
-        return HttpClientBuilder.create();
+        return null;
     }
 
     @ConditionalOnBean(type = "org.apache.http.impl.client.HttpClientBuilder")
