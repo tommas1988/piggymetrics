@@ -41,5 +41,5 @@ spring:
 #      probability: 1
 
 zipkin-apm:
-  zipkinUrl: http://zipkin:9411
-  okHttpSender: 1
+  sender: rabbitmq
+  rabbitmq-addresses: "rabbitmq:5672"

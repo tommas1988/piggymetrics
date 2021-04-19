@@ -53,10 +53,20 @@ public class TracingAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "zipkin-apm", name = {""})
+    @ConditionalOnProperty(prefix = "zipkin-apm", name = {"sender"}, havingValue = "rabbitmq")
     Sender rabbitmqSender(ZipkinApmProperties zipkinApmConfig) {
+        StringBuilder addresses = null;
+        for (String address : zipkinApmConfig.getRabbitmqAddresses()) {
+            if (addresses != null) {
+                addresses.append(',');
+            } else {
+                addresses = new StringBuilder(16);
+            }
+            addresses.append(address);
+        }
         return RabbitMQSender.newBuilder()
-                .addresses()
+                .addresses(addresses.toString())
+                .build();
     }
 
 
