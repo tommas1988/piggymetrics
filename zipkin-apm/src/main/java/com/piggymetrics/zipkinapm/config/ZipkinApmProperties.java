@@ -7,13 +7,20 @@ import javax.validation.constraints.NotNull;
 @ConfigurationProperties("zipkin-apm")
 @Validated
 public class ZipkinApmProperties {
+    enum Sender {
+        okHttp,
+        rabbitmq,
+    }
+
     private String serviceName = "__unknown_service__";
     private boolean supportsJoin = true;
     private boolean traceId128Bit = true;
 
+    private Sender sender;
+
     // zipkin server url
     @NotNull
-    private String zipkinUrl;
+    private String zipkinBaseUrl;
 
     public String getServiceName() {
         return serviceName;
@@ -39,11 +46,19 @@ public class ZipkinApmProperties {
         this.traceId128Bit = traceId128Bit;
     }
 
-    public String getZipkinUrl() {
-        return zipkinUrl;
+    public Sender getSender() {
+        return sender;
     }
 
-    public void setZipkinUrl(String zipkinUrl) {
-        this.zipkinUrl = zipkinUrl;
+    public void setSender(Sender sender) {
+        this.sender = sender;
+    }
+
+    public String getZipkinBaseUrl() {
+        return zipkinBaseUrl;
+    }
+
+    public void setZipkinBaseUrl(String zipkinBaseUrl) {
+        this.zipkinBaseUrl = zipkinBaseUrl;
     }
 }

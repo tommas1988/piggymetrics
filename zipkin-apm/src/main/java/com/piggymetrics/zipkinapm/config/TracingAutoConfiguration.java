@@ -16,6 +16,7 @@ import zipkin2.reporter.Sender;
 import zipkin2.reporter.brave.AsyncZipkinSpanHandler;
 import zipkin2.reporter.brave.ZipkinSpanHandler;
 import zipkin2.reporter.okhttp3.OkHttpSender;
+import zipkin2.reporter.amqp.RabbitMQSender;
 
 @Configuration
 @EnableConfigurationProperties(ZipkinApmProperties.class)
@@ -28,11 +29,11 @@ public class TracingAutoConfiguration {
     }*/
 
     @Bean
-    CurrentTraceContext currentTraceContext(CurrentTraceContext.ScopeDecorator correlationScopeDecorator) {
+    CurrentTraceContext currentTraceContext(/*CurrentTraceContext.ScopeDecorator correlationScopeDecorator*/) {
         CurrentTraceContext.Builder builder = ThreadLocalCurrentTraceContext.newBuilder();
-        if (correlationScopeDecorator != null) {
+        /*if (correlationScopeDecorator != null) {
             builder.addScopeDecorator(correlationScopeDecorator);
-        }
+        }*/
         return builder.build();
     }
 
@@ -46,10 +47,18 @@ public class TracingAutoConfiguration {
 
     /** Configuration for how to send spans to Zipkin */
     @Bean
-    @ConditionalOnProperty(prefix = "zipkin-apm", name = {"okHttpSender", "zipkinUrl"})
-    Sender sender(ZipkinApmProperties zipkinApmConfig) {
-        return OkHttpSender.create(zipkinApmConfig.getZipkinUrl());
+    @ConditionalOnProperty(prefix = "zipkin-apm", name = {"sender"}, havingValue = "okHttp")
+    Sender okHttpSender(ZipkinApmProperties zipkinApmConfig) {
+        return OkHttpSender.create(zipkinApmConfig.getZipkinBaseUrl());
     }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "zipkin-apm", name = {""})
+    Sender rabbitmqSender(ZipkinApmProperties zipkinApmConfig) {
+        return RabbitMQSender.newBuilder()
+                .addresses()
+    }
+
 
     /** Configuration for how to buffer spans into messages for Zipkin */
     @Bean
@@ -58,7 +67,7 @@ public class TracingAutoConfiguration {
     }
 
     @Bean
-    Tracing tracing(@Value("${spring.application.name}") String serviceName,
+    Tracing braveTracing(@Value("${spring.application.name}") String serviceName,
                     ZipkinApmProperties zipkinApmConfig,
                     Propagation.Factory propagationFactory,
                     CurrentTraceContext currentTraceContext,

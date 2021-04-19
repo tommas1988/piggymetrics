@@ -36,6 +36,12 @@
             <optional>true</optional>
         </dependency>
 
+        <dependency>
+            <groupId>io.zipkin.reporter2</groupId>
+            <artifactId>zipkin-sender-amqp-client</artifactId>
+            <optional>true</optional>
+        </dependency>
+
         <!-- instrumentations -->
         <dependency>
             <groupId>io.zipkin.brave</groupId>
