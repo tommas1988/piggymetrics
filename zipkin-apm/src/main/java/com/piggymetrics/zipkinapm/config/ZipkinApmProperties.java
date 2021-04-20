@@ -20,11 +20,9 @@ public class ZipkinApmProperties {
     private Sender sender;
 
     // zipkin server url
-    @NotNull
     private String zipkinBaseUrl;
 
     // TODO: define a Convertor to support com.rabbitmq.client.Address
-    @NotNull
     private List<String> rabbitmqAddresses;
 
     public String getServiceName() {
@@ -71,7 +69,7 @@ public class ZipkinApmProperties {
         return rabbitmqAddresses;
     }
 
-    public void setRabbitmqAddress(List<String> rabbitmqAddresses) {
+    public void setRabbitmqAddresses(List<String> rabbitmqAddresses) {
         this.rabbitmqAddresses = rabbitmqAddresses;
     }
 }

@@ -7,6 +7,7 @@ import brave.propagation.CurrentTraceContext;
 import brave.propagation.Propagation;
 import brave.propagation.ThreadLocalCurrentTraceContext;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -46,29 +47,37 @@ public class TracingAutoConfiguration {
     }
 
     /** Configuration for how to send spans to Zipkin */
-    @Bean
+
+    @Configuration
+    @ConditionalOnClass({OkHttpSender.class})
     @ConditionalOnProperty(prefix = "zipkin-apm", name = {"sender"}, havingValue = "okHttp")
-    Sender okHttpSender(ZipkinApmProperties zipkinApmConfig) {
-        return OkHttpSender.create(zipkinApmConfig.getZipkinBaseUrl());
-    }
-
-    @Bean
-    @ConditionalOnProperty(prefix = "zipkin-apm", name = {"sender"}, havingValue = "rabbitmq")
-    Sender rabbitmqSender(ZipkinApmProperties zipkinApmConfig) {
-        StringBuilder addresses = null;
-        for (String address : zipkinApmConfig.getRabbitmqAddresses()) {
-            if (addresses != null) {
-                addresses.append(',');
-            } else {
-                addresses = new StringBuilder(16);
-            }
-            addresses.append(address);
+    static class OkHttpSenderConfiguration {
+        @Bean
+        Sender okHttpSender(ZipkinApmProperties zipkinApmConfig) {
+            return OkHttpSender.create(zipkinApmConfig.getZipkinBaseUrl());
         }
-        return RabbitMQSender.newBuilder()
-                .addresses(addresses.toString())
-                .build();
     }
 
+    @Configuration
+    @ConditionalOnClass({RabbitMQSender.class})
+    @ConditionalOnProperty(prefix = "zipkin-apm", name = {"sender"}, havingValue = "rabbitmq")
+    static class AmqpSenderConfiguration {
+        @Bean
+        Sender amqpSender(ZipkinApmProperties zipkinApmConfig) {
+            StringBuilder addresses = null;
+            for (String address : zipkinApmConfig.getRabbitmqAddresses()) {
+                if (addresses != null) {
+                    addresses.append(',');
+                } else {
+                    addresses = new StringBuilder(16);
+                }
+                addresses.append(address);
+            }
+            return RabbitMQSender.newBuilder()
+                    .addresses(addresses.toString())
+                    .build();
+        }
+    }
 
     /** Configuration for how to buffer spans into messages for Zipkin */
     @Bean
