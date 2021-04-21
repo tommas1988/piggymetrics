@@ -1,6 +1,9 @@
 package com.piggymetrics.zipkinapm.config;
 
 import brave.Tracing;
+import brave.baggage.BaggageFields;
+import brave.baggage.CorrelationScopeConfig;
+import brave.context.slf4j.MDCScopeDecorator;
 import brave.http.HttpTracing;
 import brave.propagation.B3Propagation;
 import brave.propagation.CurrentTraceContext;
@@ -23,19 +26,17 @@ import zipkin2.reporter.amqp.RabbitMQSender;
 @EnableConfigurationProperties(ZipkinApmProperties.class)
 public class TracingAutoConfiguration {
     /** Allows log patterns to use {@code %{traceId}} {@code %{spanId}} and {@code %{userName}} */
-    /*@Bean
+    @Bean
     CurrentTraceContext.ScopeDecorator correlationScopeDecorator() {
         return MDCScopeDecorator.newBuilder()
-                .add(CorrelationScopeConfig.SingleCorrelationField.create(USER_NAME)).build();
-    }*/
+                .add(CorrelationScopeConfig.SingleCorrelationField.create(BaggageFields.SAMPLED)).build();
+    }
 
     @Bean
-    CurrentTraceContext currentTraceContext(/*CurrentTraceContext.ScopeDecorator correlationScopeDecorator*/) {
-        CurrentTraceContext.Builder builder = ThreadLocalCurrentTraceContext.newBuilder();
-        /*if (correlationScopeDecorator != null) {
-            builder.addScopeDecorator(correlationScopeDecorator);
-        }*/
-        return builder.build();
+    CurrentTraceContext currentTraceContext(CurrentTraceContext.ScopeDecorator correlationScopeDecorator) {
+        return ThreadLocalCurrentTraceContext.newBuilder()
+                .addScopeDecorator(correlationScopeDecorator)
+                .build();
     }
 
     @Bean

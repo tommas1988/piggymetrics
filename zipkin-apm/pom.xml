@@ -19,6 +19,12 @@
     </properties>
 
     <dependencies>
+        <!-- brave context -->
+        <dependency>
+            <groupId>io.zipkin.brave</groupId>
+            <artifactId>brave-context-slf4j</artifactId>
+        </dependency>
+
         <!-- senders -->
         <dependency>
             <groupId>io.zipkin.reporter2</groupId>

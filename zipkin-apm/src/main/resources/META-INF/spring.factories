@@ -3,3 +3,7 @@ org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 com.piggymetrics.zipkinapm.config.TracingAutoConfiguration,\
 com.piggymetrics.zipkinapm.config.HttpClientAutoConfiguration,\
 com.piggymetrics.zipkinapm.config.MongoAutoConfiguration
+
+# Environment Post Processor
+org.springframework.boot.env.EnvironmentPostProcessor=\
+com.piggymetrics.zipkinapm.config.TraceEnvironmentPostProcessor
