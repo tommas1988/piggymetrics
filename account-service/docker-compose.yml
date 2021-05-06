@@ -8,6 +8,8 @@ services:
       CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
       ACCOUNT_SERVICE_PASSWORD: $ACCOUNT_SERVICE_PASSWORD
       MONGODB_PASSWORD: $MONGODB_PASSWORD
+    volumes:
+    - ./etc/logback-spring.xml:/var/piggymetrics/logback-spring.xml
     restart: always
     # mem_limit: 400m
     # mem_reservation: 300m

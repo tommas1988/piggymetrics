@@ -11,6 +11,8 @@ services:
       CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
       MONGODB_PASSWORD: $MONGODB_PASSWORD
       STATISTICS_SERVICE_PASSWORD: $STATISTICS_SERVICE_PASSWORD
+    volumes:
+    - ./etc/logback-spring.xml:/var/piggymetrics/logback-spring.xml
     restart: always
     depends_on:
       config:

@@ -9,6 +9,8 @@ services:
     cpu_count: 1
     environment:
       CONFIG_SERVICE_PASSWORD: $CONFIG_SERVICE_PASSWORD
+    volumes:
+    - ./etc/logback-spring.xml:/var/piggymetrics/logback-spring.xml
     restart: always
     depends_on:
       config:

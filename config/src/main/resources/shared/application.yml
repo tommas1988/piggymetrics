@@ -29,17 +29,17 @@ spring:
     host: rabbitmq
 
 # TODO: move to a single config file
-#  zipkin:
-#    sender:
-#      type: rabbit
-#    rabbitmq:
-#      queue: zipkin
-#
-## for test purpose
-#  sleuth:
-#    sampler:
-#      probability: 1
+  zipkin:
+    sender:
+      type: rabbit
+    rabbitmq:
+      queue: zipkin
 
-zipkin-apm:
-  sender: rabbitmq
-  rabbitmq-addresses: "rabbitmq:5672"
+# for test purpose
+  sleuth:
+    sampler:
+      probability: 1
+
+#zipkin-apm:
+#  sender: rabbitmq
+#  rabbitmq-addresses: "rabbitmq:5672"
