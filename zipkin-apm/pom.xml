@@ -13,6 +13,11 @@
     <artifactId>zipkin-apm</artifactId>
     <version>1.0-SNAPSHOT</version>
 
+    <properties>
+        <!-- same version as spring-boot-stater-data-mongodb -->
+        <mongodb-driver.version>3.6.4</mongodb-driver.version>
+    </properties>
+
     <dependencies>
         <dependency>
             <groupId>org.springframework.cloud</groupId>
@@ -42,12 +47,13 @@
             <artifactId>zipkin-sender-amqp-client</artifactId>
             <optional>true</optional>
         </dependency>
+        -->
 
-        &lt;!&ndash; instrumentations &ndash;&gt;
-        <dependency>
+        <!-- instrumentations -->
+        <!--<dependency>
             <groupId>io.zipkin.brave</groupId>
             <artifactId>brave-instrumentation-mongodb</artifactId>
-        </dependency>
+        </dependency>-->
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongodb-driver</artifactId>
@@ -60,6 +66,8 @@
             <version>${mongodb-driver.version}</version>
             <optional>true</optional>
         </dependency>
+
+        <!--
         <dependency>
             <groupId>io.zipkin.brave</groupId>
             <artifactId>brave-instrumentation-httpclient</artifactId>
