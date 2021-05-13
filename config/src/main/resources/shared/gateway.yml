@@ -43,3 +43,8 @@ zuul:
 
 server:
   port: 4000
+
+spring:
+  sleuth:
+    web:
+      additional-skip-pattern: /css/*|/fonts/*|/images/*|/js/*
