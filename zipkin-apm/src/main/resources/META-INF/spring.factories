@@ -1,5 +1,6 @@
 # Auto Configure
 org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.piggymetrics.zipkinapm.autoconfig.ZipkinApmAutoConfiguration,\
 com.piggymetrics.zipkinapm.instrument.mongodb.TraceMongodbAutoConfiguration
 
 # Environment Post Processor
