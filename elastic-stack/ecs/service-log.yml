@@ -1,0 +1,14 @@
+name: service-log
+fields:
+  base:
+    fields:
+      "@timestamp": {}
+      "message": {}
+  ecs:
+    fields: "*"
+  log:
+    fields: "*"
+  error:
+    fields: "*"
+  trace:
+    fields: "*"
