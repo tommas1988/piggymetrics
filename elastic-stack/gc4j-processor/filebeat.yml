@@ -1,0 +1,18 @@
+filebeat.inputs:
+- type: log
+  paths:
+  - "gc.cms.log"
+  multiline:
+    type: pattern
+    pattern: '^\s'
+    match: after
+    negate: false
+
+  processors:
+  - script:
+      lang: javascript
+      id: gc4j
+      file: ${path.config}/gc-log-processor.js
+
+output.console:
+  pretty: true
