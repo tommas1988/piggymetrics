@@ -1,12 +1,12 @@
 filebeat.inputs:
 - type: log
   paths:
-  - "gc.cms.log"
+  - "gc.log"
   multiline:
     type: pattern
-    pattern: '^\s'
+    pattern: '^\d'
     match: after
-    negate: false
+    negate: true
 
   processors:
   - script:
