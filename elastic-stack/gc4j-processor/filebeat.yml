@@ -12,7 +12,7 @@ filebeat.inputs:
   - script:
       lang: javascript
       id: gc4j
-      file: ${path.config}/gc-log-processor.js
+      file: ${path.config}/gc4j-processor.js
 
 output.console:
   pretty: true
