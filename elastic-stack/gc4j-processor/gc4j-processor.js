@@ -1,17 +1,33 @@
 var debug = false;
 
+// registered gc event factories
+var GC_EVENT_FACTORIES = [];
+
+// INIT
+(function() {
+  GC_EVENT_FACTORIES.push(basicGCEventFactory);
+  GC_EVENT_FACTORIES.push(basicCmsEventFactory);
+})();
+
+// PROCESSOR API IMPLAMENTATIONS
+
 function register(params) {
   debug = !!(params.debug);
 }
 
 function process(event) {
   var parseInfo = new ParseInfo(event.Get('message'));
-  var gcEvent = new GCEvent();
+  var baseGCEvent = new GCEvent(function(beatEvent) {
+    if (this.datestamp != null) {
+      beatEvent.Put('@timestamp', this.datestamp);
+    }
+    beatEvent.Put('gc.timestamp', this.timestamp);
+  });
 
-  parseDateStamp(parseInfo, gcEvent);
-  parseTimeStamp(parseInfo, gcEvent);
+  parseDateStamp(parseInfo, baseGCEvent);
+  parseTimeStamp(parseInfo, baseGCEvent);
 
-  if (!gcEvent.timestamp) {
+  if (!baseGCEvent.timestamp) {
       if (debug)
         throw 'Can not parse gc timestamp at pos: ' + parseInfo.pos;
 
@@ -19,6 +35,25 @@ function process(event) {
     return;
   }
 
+  var gcEvents = [];
+  parseGCEvent(parseInfo, gcEvents);
+
+  if (events.length == 0)
+    return;
+
+  gcEvents.push(baseGCEvent);
+  for (var i = 0, len = gcEvents.length; i < len; i++) {
+    gcEvents[i].process(event);
+  }
+}
+
+// GC EVENT FACTORIES
+
+function basicGCEventFactory(parseInfo) {
+
+}
+
+function basicCmsEventFactory(parseInfo) {
 
 }
 
@@ -27,14 +62,21 @@ function ParseInfo(message) {
   this.pos = 0;
 }
 
-ParseInfo.prototype.equalsAt(pos, str) {
+ParseInfo.prototype.equalsAt = function(pos, str) {
   return this.message.substring(pos, pos + str.length) == str;
-}
+};
 
-function GCEvent() {
-  this.datestamp = null;
-  this.timestamp = null;
-  this.gcType = null;
+ParseInfo.prototype.current = function(skipBlanks) {
+  if (!!skipBlanks) {
+    // todo: skip blanks
+  }
+
+  var m = this.message;
+  return this.pos < m.length ? m[this.pos] : null;
+};
+
+function GCEvent(eventProcessor) {
+  this.process = eventProcessor.bind(this);
 }
 
 // find and convert 2021-05-31T22:05:40.007+0800 to 2021-05-31T22:05:40.007Z for @timestamp
@@ -67,10 +109,22 @@ function parseTimeStamp(pi) {
     // pass the following ": "
     pi.pos += (ts.length + 2)
   }
-
-
 }
 
-function parseGCEvent(pi, gcEvent) {
+function parseGCEvent(pi, events) {
+  var m = pi.message;
+  var pos = m.indexOf('[', pi.pos);
+  if (pos == -1)
+    return;
 
+  // update parse position
+  pi.pos = pos;
+
+  for (var i = 0, len = GC_EVENT_FACTORIES.length; i < len; i++) {
+    var event = GC_EVENT_FACTORIES[i](pi);
+    if (event != null) {
+      events.push(event);
+      break;
+    }
+  }
 }
