@@ -26,7 +26,7 @@ var test_messages = [
 
 var BeatEvent = {
   Put: function(key, value) {
-    console(key + ' = ' + value);
+    console.log(key + ' = ' + value);
   },
 
   Get: function(key) {
@@ -36,5 +36,9 @@ var BeatEvent = {
 
 for (var i = 0; i < test_messages.length; i++) {
   BeatEvent.message = test_messages[i];
-  process(BeatEvent);
+  try {
+    process(BeatEvent);
+  } catch (m) {
+    console.log(m);
+  }
 }
