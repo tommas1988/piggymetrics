@@ -16,6 +16,9 @@ var ECS_MEMORY_METASPACE_AFTER_GC = 'GC4j.Memory.Metaspace.AfterGC';
 var ECS_MEMORY_METASPACE_TOTAL = 'GC4j.Memory.Metaspace.Total';
 var ECS_PAUSE_TIME = 'GC4j.PauseTime';
 
+// canonical name => processor(rawName, beatEvent, content)
+var GC_EVENT_PROCESSORS = {};
+
 // registered gc event factories
 var GC_EVENT_FACTORIES = [];
 
@@ -60,6 +63,72 @@ function process(event) {
   for (var i = 0, len = gcEvents.length; i < len; i++) {
     gcEvents[i].process(event);
   }
+}
+
+function MessageParser(message) {
+  this.message = message;
+}
+
+MessageParser.prototype.parse = function() {
+  var eventStack = [];
+  var m = this.message;
+  var c, eventName;
+  for (var i = 0, len = m.length; i < len; i++) {
+    c = m[i];
+    if ('[' == c) {
+      eventName = this.parseEventName(i);
+    } else if (']' == c) {
+
+    }
+  }
+
+  while (pos < len) {
+    var char = m[pos];
+
+    if ()
+  }
+
+  switch (m[this.pos]) {
+  case '[':
+    this.bracketPairs[this.pos] = -1;
+    this.bracketStack.push(this.pos);
+    break;
+  case ']':
+    var lb = this.bracketStack.pop();
+    if (debug && lb == undefined) {
+      throw 'Invalid bracket pair for right bracket at position:' + this.pos;
+    }
+    this.bracketPairs[lb] = this.pos;
+    break;
+  }
+
+  return m[this.pos++];
+}
+
+MessageParser.prototype.parseEventName = function(pos) {
+  var startPos = pos;
+  var m = this.message;
+
+  // check whether the type name starts with a number
+  // e.g. 0.406: [GC [1 CMS-initial-mark: 7664K(12288K)] 7666K(16320K), 0.0006855 secs]
+  while (isDigitCharCode(m.charCodeAt(pos++))) ;
+
+  var cStartPos = pos;
+  var c;
+  for (var len = m.length; pos < len; pos++) {
+    c = m[pos];
+    if (c == '[' || c == ']') {
+      // back to '[' or ']' for parsing
+      pos--;
+      break;
+    } else if (c == '(' || c == ')' || c == ':' || c== ',' || isDigitChar(c))
+      break;
+  }
+
+  return {
+    canonical: m.substring(cStartPos, pos).trim(),
+    raw: m.substring(startPos, pos)
+  };
 }
 
 // GC EVENT FACTORIES
