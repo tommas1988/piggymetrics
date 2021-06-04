@@ -37,15 +37,15 @@ var ROOT_EVENT_NAME = '__ROOT__';
     beatEvent.Put(ECS_TIMESTAMP, parser.timestamp);
   };
 
-  GC_EVENT_FACTORIES['GC'] = function(beatEvent, gcEventNode) {
+  GC_EVENT_PROCESSORS['GC'] = function(beatEvent, gcEventNode) {
     var childNodes = gcEventNode.children;
-    var startPos = childNodes.length > 0 childNodes[childNodes.length-1].endPos ? gcEventNode.startPos;
+    var startPos = childNodes.length > 0 ? childNodes[childNodes.length-1].endPos : gcEventNode.startPos;
     var content = gcEventNode.parser.message.substring(startPos, gcEventNode.endPos);
     recordMemoryInfo(parseMemory(content, MEMORY_HEAP), beatEvent);
     recordPauseTime(parsePauseTime(content), beatEvent);
   };
 
-  GC_EVENT_FACTORIES['Full GC'] = function(beatEvent, gcEventNode) {
+  GC_EVENT_PROCESSORS['Full GC'] = function(beatEvent, gcEventNode) {
     var content = gcEventNode.text();
     recordMemoryInfo(parseMemory(content, MEMORY_HEAP), beatEvent);
     recordPauseTime(parsePauseTime(content), beatEvent);
@@ -55,18 +55,18 @@ var ROOT_EVENT_NAME = '__ROOT__';
   var youngGCProcessor = function(beatEvent, gcEventNode) {
     recordMemoryInfo(parseMemory(gcEventNode.text(), MEMORY_YOUNG), beatEvent);
   };
-  GC_EVENT_FACTORIES['ParNew'] = youngGCProcessor;
-  GC_EVENT_FACTORIES['DefNew'] = youngGCProcessor;
+  GC_EVENT_PROCESSORS['ParNew'] = youngGCProcessor;
+  GC_EVENT_PROCESSORS['DefNew'] = youngGCProcessor;
 
   // TENURED GC
-  var tenuredGCProcessor = function(beatEvent, gcEvent) {
+  var tenuredGCProcessor = function(beatEvent, gcEventNode) {
     recordMemoryInfo(parseMemory(gcEventNode.text(), MEMORY_TENURED), beatEvent);
   };
-  GC_EVENT_FACTORIES['CMS-initial-mark'] = tenuredGCProcessor;
-  GC_EVENT_FACTORIES['CMS-remark'] = tenuredGCProcessor;
+  GC_EVENT_PROCESSORS['CMS-initial-mark'] = tenuredGCProcessor;
+  GC_EVENT_PROCESSORS['CMS-remark'] = tenuredGCProcessor;
 
   // METASPACE / PERM GC
-  GC_EVENT_FACTORIES['Metaspace'] = function(beatEvent, gcEvent) {
+  GC_EVENT_PROCESSORS['Metaspace'] = function(beatEvent, gcEventNode) {
     recordMemoryInfo(parseMemory(gcEventNode.text(), MEMORY_METASPACE), beatEvent);
   };
 })();
@@ -78,40 +78,12 @@ function register(params) {
 }
 
 function process(event) {
-  var parseInfo = new ParseInfo(event.Get('message'));
-  var baseGCEvent = new GCEvent(function(beatEvent) {
-    if (this.datestamp != null) {
-      beatEvent.Put('@timestamp', this.datestamp);
-    }
-    beatEvent.Put(ECS_TIMESTAMP, this.timestamp);
-  });
-
-  parseDateStamp(parseInfo, baseGCEvent);
-  parseTimeStamp(parseInfo, baseGCEvent);
-
-  if (!baseGCEvent.timestamp) {
-      if (debug)
-        throw 'Can not parse gc timestamp at pos: ' + parseInfo.pos;
-
-    // no gc timestamp find skip this event
-    return;
-  }
-
-  var gcEvents = [];
-  parseGCEvent(parseInfo, gcEvents);
-
-  if (gcEvents.length == 0)
-    return;
-
-  gcEvents.push(baseGCEvent);
-  for (var i = 0, len = gcEvents.length; i < len; i++) {
-    gcEvents[i].process(event);
-  }
+  new MessageParser(event.Get('message')).parse(event);
 }
 
 function MessageParser(message) {
   this.message = message;
-  this.pos;
+  this.pos = 0;
   this.datestamp;
   this.timestamp;
 }
@@ -133,20 +105,20 @@ MessageParser.prototype.parse = function(beatEvent) {
   }
 
   // root event
-  rootNode = currNode = new GCEventNode({
-    canonical: ROOT_EVENT_NAME,
-    raw: ''
-  }, 0, null, this);
+  rootNode = currNode = new GCEventNode(ROOT_EVENT_NAME, 0, null, this);
 
-  for (var i = this.pos, len = m.length; i < len; i++) {
-    char = m[i];
+  for (len = m.length; this.pos < len; this.pos++) {
+    char = m[this.pos];
     if ('[' == char) {
-      eventName = this.parseEventName(i);
-      currNode = new GCEventNode(eventName, i, currNode, this);
-      i += eventName.raw.length;
+      var startPos = this.pos;
+
+      // skip '[' for parsing event name
+      this.pos++;
+      eventName = this.parseEventName();
+      currNode = new GCEventNode(eventName, startPos, currNode, this);
     } else if (']' == char) {
-      currNode.endPos = i;
-      if (processor = GC_EVENT_PROCESSORS[currNode.name.canonical]) {
+      currNode.endPos = this.pos;
+      if (processor = GC_EVENT_PROCESSORS[currNode.name]) {
         processor(beatEvent, currNode);
       }
 
@@ -164,30 +136,30 @@ MessageParser.prototype.parse = function(beatEvent) {
   }
 }
 
-MessageParser.prototype.parseEventName = function(pos) {
-  var startPos = pos;
+MessageParser.prototype.parseEventName = function() {
+  var pos = this.pos;
   var m = this.message;
+
+  while (m[this.pos++] == ' ')
+    continue;
 
   // check whether the type name starts with a number
   // e.g. 0.406: [GC [1 CMS-initial-mark: 7664K(12288K)] 7666K(16320K), 0.0006855 secs]
-  while (isDigitCharCode(m.charCodeAt(pos++))) ;
+  while (isDigitCharCode(m.charCodeAt(this.pos++))) ;
 
   var cStartPos = pos;
   var c;
-  for (var len = m.length; pos < len; pos++) {
-    c = m[pos];
+  for (var len = m.length; this.pos < len; this.pos++) {
+    c = m[this.pos];
     if (c == '[' || c == ']') {
       // back to '[' or ']' for parsing
-      pos--;
+      this.pos--;
       break;
     } else if (c == '(' || c == ')' || c == ':' || c== ',' || isDigitChar(c))
       break;
   }
 
-  return {
-    canonical: m.substring(cStartPos, pos).trim(),
-    raw: m.substring(startPos, pos)
-  };
+  return m.substring(cStartPos, this.pos).trim();
 }
 
 // find and convert 2021-05-31T22:05:40.007+0800 to 2021-05-31T22:05:40.007Z for @timestamp
@@ -262,6 +234,9 @@ GCEventNode.prototype.text = function(sep) {
 }
 
 function recordMemoryInfo(memoryInfo, beatEvent) {
+  if (!memoryInfo)
+    return;
+
   var beforeGCKey, afterGCKey, totalGCKey;
   if (memoryInfo.type == MEMORY_YOUNG) {
     beforeGCKey = ECS_MEMORY_YOUNG_BEFORE_GC;
@@ -281,14 +256,14 @@ function recordMemoryInfo(memoryInfo, beatEvent) {
     totalGCKey = ECS_MEMORY_HEAP_TOTAL;
   }
 
-  if (memoryinfo.beforeGC) {
-    beatEvent.Put(beforeGCKey, memoryinfo.beforeGC);
+  if (memoryInfo.beforeGC) {
+    beatEvent.Put(beforeGCKey, memoryInfo.beforeGC);
   }
-  if (memory.afterGC) {
-    beatEvent.Put(afterGCKey, memory.afterGC);
+  if (memoryInfo.afterGC) {
+    beatEvent.Put(afterGCKey, memoryInfo.afterGC);
   }
-  if (memory.total) {
-    beatEvent.Put(totalGCKey, memory.total);
+  if (memoryInfo.total) {
+    beatEvent.Put(totalGCKey, memoryInfo.total);
   }
 }
 
@@ -321,7 +296,7 @@ function parseMemory(content, memoryType) {
   result.afterGC = r[3];
   result.total = r[4];
 
-  return resultl;
+  return result;
 }
 
 var pauseTimeRegExp = /(\d*\.\d*) sec/;
