@@ -16,15 +16,59 @@ var ECS_MEMORY_METASPACE_AFTER_GC = 'GC4j.Memory.Metaspace.AfterGC';
 var ECS_MEMORY_METASPACE_TOTAL = 'GC4j.Memory.Metaspace.Total';
 var ECS_PAUSE_TIME = 'GC4j.PauseTime';
 
-// canonical name => processor(rawName, beatEvent, content)
+var MEMORY_HEAP = 'heap'
+var MEMORY_YOUNG = 'young';
+var MEMORY_TENURED = 'tenured';
+var MEMORY_METASPACE = 'metaspace';
+
+// canonical name => void processor(BeatEvent, GCEventNode)
 var GC_EVENT_PROCESSORS = {};
 
-// registered gc event factories
-var GC_EVENT_FACTORIES = [];
+var ROOT_EVENT_NAME = '__ROOT__';
 
 // INIT
 (function() {
-  GC_EVENT_FACTORIES.push(basicGCEventFactory);
+  GC_EVENT_PROCESSORS[ROOT_EVENT_NAME] = function(beatEvent, gcEventNode) {
+    var parser = gcEventNode.parser;
+    if (parser.datestamp) {
+      beatEvent.Put('@timestamp', parser.datestamp);
+    }
+
+    beatEvent.Put(ECS_TIMESTAMP, parser.timestamp);
+  };
+
+  GC_EVENT_FACTORIES['GC'] = function(beatEvent, gcEventNode) {
+    var childNodes = gcEventNode.children;
+    var startPos = childNodes.length > 0 childNodes[childNodes.length-1].endPos ? gcEventNode.startPos;
+    var content = gcEventNode.parser.message.substring(startPos, gcEventNode.endPos);
+    recordMemoryInfo(parseMemory(content, MEMORY_HEAP), beatEvent);
+    recordPauseTime(parsePauseTime(content), beatEvent);
+  };
+
+  GC_EVENT_FACTORIES['Full GC'] = function(beatEvent, gcEventNode) {
+    var content = gcEventNode.text();
+    recordMemoryInfo(parseMemory(content, MEMORY_HEAP), beatEvent);
+    recordPauseTime(parsePauseTime(content), beatEvent);
+  };
+
+  // YOUNG GC
+  var youngGCProcessor = function(beatEvent, gcEventNode) {
+    recordMemoryInfo(parseMemory(gcEventNode.text(), MEMORY_YOUNG), beatEvent);
+  };
+  GC_EVENT_FACTORIES['ParNew'] = youngGCProcessor;
+  GC_EVENT_FACTORIES['DefNew'] = youngGCProcessor;
+
+  // TENURED GC
+  var tenuredGCProcessor = function(beatEvent, gcEvent) {
+    recordMemoryInfo(parseMemory(gcEventNode.text(), MEMORY_TENURED), beatEvent);
+  };
+  GC_EVENT_FACTORIES['CMS-initial-mark'] = tenuredGCProcessor;
+  GC_EVENT_FACTORIES['CMS-remark'] = tenuredGCProcessor;
+
+  // METASPACE / PERM GC
+  GC_EVENT_FACTORIES['Metaspace'] = function(beatEvent, gcEvent) {
+    recordMemoryInfo(parseMemory(gcEventNode.text(), MEMORY_METASPACE), beatEvent);
+  };
 })();
 
 // PROCESSOR API IMPLAMENTATIONS
@@ -67,42 +111,57 @@ function process(event) {
 
 function MessageParser(message) {
   this.message = message;
+  this.pos;
+  this.datestamp;
+  this.timestamp;
 }
 
-MessageParser.prototype.parse = function() {
-  var eventStack = [];
+MessageParser.prototype.parse = function(beatEvent) {
+  var processor;
+  var rootNode, currNode;
   var m = this.message;
-  var c, eventName;
-  for (var i = 0, len = m.length; i < len; i++) {
-    c = m[i];
-    if ('[' == c) {
+  var char;
+
+  this.parseDateStamp();
+  this.parseTimeStamp();
+
+  // skip message if no timestamp find
+  if (!this.timestamp) {
+    if (debug)
+      throw 'can not find timestamp info for this message';
+    return;
+  }
+
+  // root event
+  rootNode = currNode = new GCEventNode({
+    canonical: ROOT_EVENT_NAME,
+    raw: ''
+  }, 0, null, this);
+
+  for (var i = this.pos, len = m.length; i < len; i++) {
+    char = m[i];
+    if ('[' == char) {
       eventName = this.parseEventName(i);
-    } else if (']' == c) {
+      currNode = new GCEventNode(eventName, i, currNode, this);
+      i += eventName.raw.length;
+    } else if (']' == char) {
+      currNode.endPos = i;
+      if (processor = GC_EVENT_PROCESSORS[currNode.name.canonical]) {
+        processor(beatEvent, currNode);
+      }
 
+      currNode = currNode.parent;
     }
   }
 
-  while (pos < len) {
-    var char = m[pos];
-
-    if ()
+  // process root node
+  if (processor = GC_EVENT_PROCESSORS[ROOT_EVENT_NAME]) {
+    processor(beatEvent, rootNode);
   }
 
-  switch (m[this.pos]) {
-  case '[':
-    this.bracketPairs[this.pos] = -1;
-    this.bracketStack.push(this.pos);
-    break;
-  case ']':
-    var lb = this.bracketStack.pop();
-    if (debug && lb == undefined) {
-      throw 'Invalid bracket pair for right bracket at position:' + this.pos;
-    }
-    this.bracketPairs[lb] = this.pos;
-    break;
+  if (debug && rootNode != currNode) {
+    throw 'Mismatching bracket pairs';
   }
-
-  return m[this.pos++];
 }
 
 MessageParser.prototype.parseEventName = function(pos) {
@@ -131,95 +190,88 @@ MessageParser.prototype.parseEventName = function(pos) {
   };
 }
 
-// GC EVENT FACTORIES
-
-var GC_MEMORY_YOUNG = 'young';
-var GC_MEMORY_TENURED = 'tenured';
-var GC_MEMORY_METASPACE = 'metaspace';
-
-var YOUNG_GC_EVENT_SET = {
-  'ParNew': true,
-  'DefNew': true
-};
-var TENURED_GC_EVENT_SET = {
-  'CMS-initial-mark': true,
-  'CMS-remark': true
-};
-
-/**
- * only record stw pause time and memory useage
- *
- * @param ParseInfo parseInfo
- * @param Array events container of parsed gc event. required to push parsed event to this container
- *
- * @return null|GCEvent
- */
-function basicGCEventFactory(parseInfo, events) {
-  var leftBracketPos, rightBracketPos;
-  leftBracketPos = parseInfo.pos - 1;
-
-  var eventStr = parseEventString(parseInfo);
-  var gcEvent = null;
-  var memoryType;
-
-  if (eventStr.indexOf('GC') == 0 || eventStr.indexOf('Full GC') == 0) {
-    while ((rightBracketPos = parseInfo.bracketPairs[leftBracketPos]) == -1 && !parseInfo.isEnd()) {
-      parseGCEvent(parseInfo, events);
+// find and convert 2021-05-31T22:05:40.007+0800 to 2021-05-31T22:05:40.007Z for @timestamp
+var LENGTH_OF_DATESTAMP = 28;
+MessageParser.prototype.parseDateStamp = function() {
+  var m = this.message;
+  if (m[4] == '-' && m[7] == '-') {
+    // TODO: validate the date with a regular expression
+    var date = new Date(m.substring(0, LENGTH_OF_DATESTAMP));
+    if (date) {
+      this.datestamp = n.substring(0, LENGTH_OF_DATESTAMP - 5) + 'Z';
+      // pass the following ": "
+      this.pos = LENGTH_OF_DATESTAMP + 2;
     }
-
-    if (debug && rightBracketPos == -1 && parseInfo.isEnd())
-      throw 'Invalid bracket pair for left bracket at position: ' + startPos;
-
-    // find previous ']'
-    var prevRightBracketPos = -1;
-    for (var lbp in parseInfo.bracketPairs) {
-      var p = parseInfo.bracketPairs[lbp];
-      if (p >= rightBracketPos)
-        continue;
-
-      prevRightBracketPos = p > prevRightBracketPos ? p : prevRightBracketPos;
-    }
-
-    if (prevRightBracketPos == -1) {
-      if (debug)
-        throw 'Can not find previous ] at position: ' + rightBracketPos;
-
-      return null;
-    }
-
-    var parseStr = parseInfo.message.substring(prevRightBracketPos, rightBracketPos);
-    gcEvent = new GCEvent(basicGCEventProcessor);
-    parseMemory(parseStr, gcEvent);
-    parsePauseTime(parseStr, gcEvent);
-  } else if (YOUNG_GC_EVENT_SET[eventStr]) {
-    memoryType = GC_MEMORY_YOUNG;
-  } else if (TENURED_GC_EVENT_SET[eventStr]) {
-    memoryType = GC_MEMORY_TENURED;
-  } else if (eventStr.indexOf('Metaspace') == 0) {
-    memoryType = GC_MEMORY_METASPACE;
   }
-
-  if (memoryType) {
-    gcEvent = new GCEvent(basicGCEventProcessor);
-    gcEvent.memoryType = memoryType;
-    rightBracketPos = findRigthBracket(leftBracketPos, parseInfo);
-    parseMemory(parseInfo.message.substring(leftBracketPos, rightBracketPos), gcEvent);
-  }
-
-  return gcEvent;
 }
 
-function basicGCEventProcessor(beatEvent) {
+var timeStampRegExp = /^\d*\.\d*/;
+// enough to hold to timestamp string
+var LENGTH_OF_TIMESTAMP = 20;
+MessageParser.prototype.parseTimeStamp = function() {
+  var tsStr = this.message.substring(this.pos, this.pos + LENGTH_OF_TIMESTAMP);
+  var r = timeStampRegExp.exec(tsStr);
+  var ts;
+  if (r && (ts = r[0]) && this.message.indexOf(': ', this.pos + ts.length)) {
+    this.timestamp = ts;
+
+    // pass the following ": "
+    this.pos += (ts.length + 2)
+  }
+}
+
+function GCEventNode(name, startPos, parent, parser) {
+  this.name = name;
+  this.startPos = startPos;
+  this.endPos = -1;
+  this.parent = parent;
+  this.parser = parser;
+  this.children = [];
+
+  if (parent) {
+    parent.children.push(this);
+  }
+}
+
+/**
+ * Text that not include child nodes
+ *
+ * @param sep Seperator used to gulp text between child nodes, default is space
+ */
+GCEventNode.prototype.text = function(sep) {
+  if (this.children.length == 0) {
+    return this.parser.message.substring(this.startPos, this.endPos);
+  }
+
+  sep = sep || ' ';
+
+  var text = '';
+  var m = this.parser.message;
+  var pos, child;
+  for (var i = 0, len = this.children.length; i < len; i++) {
+    child = this.children[i];
+    if (!pos) {
+      text += sep + m.substring(this.startPos, child.startPos);
+    } else {
+      text += sep + m.substring(pos, child.startPos);
+    }
+    pos = child.endPos;
+  }
+
+  return text + sep + m.substring(pos, this.endPos);
+}
+
+function recordMemoryInfo(memoryInfo, beatEvent) {
   var beforeGCKey, afterGCKey, totalGCKey;
-  if (this.memoryType == GC_MEMORY_YOUNG) {
+  if (memoryInfo.type == MEMORY_YOUNG) {
     beforeGCKey = ECS_MEMORY_YOUNG_BEFORE_GC;
     afterGCKey = ECS_MEMORY_YOUNG_AFTER_GC;
     totalGCKey = ECS_MEMORY_YOUNG_TOTAL;
-  } else if (this.memoryType == GC_MEMORY_TENURED) {
+  } else if (memoryInfo.type == MEMORY_TENURED) {
     beforeGCKey = ECS_MEMORY_TENURED_BEFORE_GC;
     afterGCKey = ECS_MEMORY_TENURED_AFTER_GC;
     totalGCKey = ECS_MEMORY_TENURED_TOTAL;
-  } else if (this.memoryType == GC_MEMORY_METASPACE) {
+  } else if (memoryInfo.type == MEMORY_METASPACE) {
     beforeGCKey = ECS_MEMORY_METASPACE_BEFORE_GC;
     afterGCKey = ECS_MEMORY_METASPACE_AFTER_GC;
     totalGCKey = ECS_MEMORY_METASPACE_TOTAL;
@@ -229,143 +281,19 @@ function basicGCEventProcessor(beatEvent) {
     totalGCKey = ECS_MEMORY_HEAP_TOTAL;
   }
 
-  if (this.memoryBeforeGC) {
-    beatEvent.Put(beforeGCKey, this.memoryBeforeGC);
+  if (memoryinfo.beforeGC) {
+    beatEvent.Put(beforeGCKey, memoryinfo.beforeGC);
   }
-  if (this.memoryAfterGC) {
-    beatEvent.Put(afterGCKey, this.memoryAfterGC);
+  if (memory.afterGC) {
+    beatEvent.Put(afterGCKey, memory.afterGC);
   }
-  if (this.memoryTotal) {
-    beatEvent.Put(totalGCKey, this.memoryTotal);
-  }
-  if (this.pauseTime) {
-    beatEvent.Put(ECS_PAUSE_TIME, this.pauseTime);
+  if (memory.total) {
+    beatEvent.Put(totalGCKey, memory.total);
   }
 }
 
-function ParseInfo(message) {
-  this.message = message;
-  this.pos = 0;
-  this.bracketPairs = {};
-  this.bracketStack = [];
-}
-
-ParseInfo.prototype.equalsAt = function(pos, str) {
-  return this.message.substring(pos, pos + str.length) == str;
-};
-
-ParseInfo.prototype.isEnd = function() {
-  return this.pos >= this.message.length;
-}
-
-ParseInfo.prototype.next = function(skipBlanks) {
-  var m = this.message;
-
-  if (!!skipBlanks) {
-    while (m[this.pos] == ' ')
-      this.pos++;
-  }
-
-  if (this.pos >= m.length)
-    return null;
-
-  switch (m[this.pos]) {
-  case '[':
-    this.bracketPairs[this.pos] = -1;
-    this.bracketStack.push(this.pos);
-    break;
-  case ']':
-    var lb = this.bracketStack.pop();
-    if (debug && lb == undefined) {
-      throw 'Invalid bracket pair for right bracket at position:' + this.pos;
-    }
-    this.bracketPairs[lb] = this.pos;
-    break;
-  }
-
-  return m[this.pos++];
-};
-
-function GCEvent(eventProcessor) {
-  this.process = eventProcessor.bind(this);
-}
-
-// find and convert 2021-05-31T22:05:40.007+0800 to 2021-05-31T22:05:40.007Z for @timestamp
-var LENGTH_OF_DATESTAMP = 28;
-
-function parseDateStamp(pi, gcEvent) {
-  if (pi.message[4] == '-' && pi.message[7] == '-') {
-    // TODO: validate the date with a regular expression
-    var date = new Date(pi.message.substring(0, LENGTH_OF_DATESTAMP));
-    if (date && pi.equalsAt(LENGTH_OF_DATESTAMP, ': ')) {
-      gcEvent.datestamp = pi.message.substring(0, LENGTH_OF_DATESTAMP - 5) + 'Z';
-
-      // pass the following ": "
-      pi.pos = LENGTH_OF_DATESTAMP + 2
-    }
-  }
-}
-
-var timeStampRegExp = /^\d*\.\d*/;
-// enough to hold to timestamp string
-var LENGTH_OF_TIMESTAMP = 20;
-
-function parseTimeStamp(pi, gcEvent) {
-  var tsStr = pi.message.substring(pi.pos, pi.pos + LENGTH_OF_TIMESTAMP);
-  var r = timeStampRegExp.exec(tsStr);
-  var ts;
-  if (r && (ts = r[0]) && pi.equalsAt(pi.pos + ts.length, ': ')) {
-    gcEvent.timestamp = ts;
-
-    // pass the following ": "
-    pi.pos += (ts.length + 2)
-  }
-}
-
-function parseGCEvent(pi, events) {
-  var char;
-  while ((char = pi.next(true)) != null && char != '[')
-    continue;
-
-  if (char == null)
-    return;
-
-  for (var i = 0, len = GC_EVENT_FACTORIES.length; i < len; i++) {
-    var event = GC_EVENT_FACTORIES[i](pi, events);
-    if (event != null) {
-      events.push(event);
-      break;
-    }
-  }
-}
-
-function parseEventString(pi) {
-  var m = pi.message;
-
-  // check whether the type name starts with a number
-  // e.g. 0.406: [GC [1 CMS-initial-mark: 7664K(12288K)] 7666K(16320K), 0.0006855 secs]
-  while (isDigitCharCode(m.charCodeAt(pi.pos)))
-    pi.pos++;
-
-  var startPos = pi.pos;
-  var c;
-  var inParanthesis = false;
-  while ((c = pi.next(true)) != null) {
-    if (c == '(' || inParanthesis || c == ')') {
-      // option "-XX:+PrintPromotionFailure" inserts text in parentheses between "ParNew" and "(promotion failed)"
-      // [ParNew (0: promotion failure size = 4098)  (1: promotion failure size = 4098)  (2: promotion failure size = 4098) (promotion failed):
-      // parsing must not stop until end of (promotion failed)...
-      inParanthesis = (c != ')');
-      continue;
-    }
-    if (c == ':' || c == '[' || c == ']' || c== ',' || isDigitChar(c))
-      break;
-  }
-
-  // back 1 position
-  pi.pos--;
-
-  return m.substring(startPos, pi.pos).trim();
+function recordPauseTime(pauseTime, beatEvent) {
+  beatEvent.Put(ECS_PAUSE_TIME, pauseTime);
 }
 
 // 0: 48 9: 57
@@ -377,36 +305,31 @@ function isDigitChar(char) {
   return isDigitCharCode(char.charCodeAt(0));
 }
 
-function findRigthBracket(leftBracketPos, parseInfo) {
-  var rightBracketPos = parseInfo.bracketPairs[leftBracketPos];
-  if (rightBracketPos > 0) {
-    return rightBracketPos;
-  }
-
-  var char;
-  while ((char = parseInfo.next(true)) != null && parseInfo.bracketPairs[leftBracketPos] == -1)
-    continue;
-
-  return parseInfo.pos;
-}
-
 var memoryRegExp = /((\d*)K->)?(\d*)K\((\d*)K\)/;
-function parseMemory(content, gcEvent) {
+function parseMemory(content, memoryType) {
   var r = memoryRegExp.exec(content);
   if (!r)
-    return;
+    return null;
+
+  var result = {
+    type: memoryType
+  };
 
   if (r[2]) {
-    gcEvent.memoryBeforeGC = r[2];
+    result.beforeGC = r[2];
   }
-  gcEvent.memoryAfterGC = r[3];
-  gcEvent.memoryTotal = r[4];
+  result.afterGC = r[3];
+  result.total = r[4];
+
+  return resultl;
 }
 
 var pauseTimeRegExp = /(\d*\.\d*) sec/;
-function parsePauseTime(content, gcEvent) {
+function parsePauseTime(content) {
   var r = pauseTimeRegExp.exec(content);
   if (r && r[1]) {
-    gcEvent.pauseTime = r[1];
+    return r[1];
   }
+
+  return null;
 }
