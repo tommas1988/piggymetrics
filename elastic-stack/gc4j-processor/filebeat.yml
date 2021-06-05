@@ -12,6 +12,7 @@ filebeat.inputs:
   - script:
       lang: javascript
       id: gc4j
+      tag_on_exception: parse_error
       file: ${path.config}/gc4j-processor.js
 
 output.console:

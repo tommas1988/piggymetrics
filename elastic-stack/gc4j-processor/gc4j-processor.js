@@ -14,7 +14,9 @@ var ECS_MEMORY_HEAP_TOTAL = 'GC4j.Memory.Heap.Total';
 var ECS_MEMORY_METASPACE_BEFORE_GC = 'GC4j.Memory.Metaspace.BeforeGC';
 var ECS_MEMORY_METASPACE_AFTER_GC = 'GC4j.Memory.Metaspace.AfterGC';
 var ECS_MEMORY_METASPACE_TOTAL = 'GC4j.Memory.Metaspace.Total';
-var ECS_PAUSE_TIME = 'GC4j.PauseTime';
+var ECS_YOUNG_PAUSE_TIME = 'GC4j.PauseTime.Young';
+var ECS_TENURED_PAUSE_TIME = 'GC4j.PauseTime.Tenured';
+var ECS_TOTAL_PAUSE_TIME = 'GC4j.PauseTime.Total';
 
 var MEMORY_HEAP = 'heap'
 var MEMORY_YOUNG = 'young';
@@ -42,28 +44,33 @@ var ROOT_EVENT_NAME = '__ROOT__';
     var startPos = childNodes.length > 0 ? childNodes[childNodes.length-1].endPos : gcEventNode.startPos;
     var content = gcEventNode.parser.message.substring(startPos, gcEventNode.endPos);
     recordMemoryInfo(parseMemory(content, MEMORY_HEAP), beatEvent);
-    recordPauseTime(parsePauseTime(content), beatEvent);
+    recordPauseTime(parsePauseTime(content), beatEvent, ECS_TOTAL_PAUSE_TIME);
   };
 
   GC_EVENT_PROCESSORS['Full GC'] = function(beatEvent, gcEventNode) {
     var content = gcEventNode.text();
     recordMemoryInfo(parseMemory(content, MEMORY_HEAP), beatEvent);
-    recordPauseTime(parsePauseTime(content), beatEvent);
+    recordPauseTime(parsePauseTime(content), beatEvent, ECS_TOTAL_PAUSE_TIME);
   };
 
   // YOUNG GC
   var youngGCProcessor = function(beatEvent, gcEventNode) {
-    recordMemoryInfo(parseMemory(gcEventNode.text(), MEMORY_YOUNG), beatEvent);
+    var content = gcEventNode.text();
+    recordMemoryInfo(parseMemory(content, MEMORY_YOUNG), beatEvent);
+    recordPauseTime(parsePauseTime(content), beatEvent, ECS_YOUNG_PAUSE_TIME);
   };
   GC_EVENT_PROCESSORS['ParNew'] = youngGCProcessor;
   GC_EVENT_PROCESSORS['DefNew'] = youngGCProcessor;
 
   // TENURED GC
   var tenuredGCProcessor = function(beatEvent, gcEventNode) {
-    recordMemoryInfo(parseMemory(gcEventNode.text(), MEMORY_TENURED), beatEvent);
+    var content = gcEventNode.text();
+    recordMemoryInfo(parseMemory(content, MEMORY_TENURED), beatEvent);
+    recordPauseTime(parsePauseTime(content), beatEvent, ECS_TENURED_PAUSE_TIME);
   };
   GC_EVENT_PROCESSORS['CMS-initial-mark'] = tenuredGCProcessor;
   GC_EVENT_PROCESSORS['CMS-remark'] = tenuredGCProcessor;
+  GC_EVENT_PROCESSORS['CMS'] = tenuredGCProcessor;
 
   // METASPACE / PERM GC
   GC_EVENT_PROCESSORS['Metaspace'] = function(beatEvent, gcEventNode) {
@@ -107,14 +114,14 @@ MessageParser.prototype.parse = function(beatEvent) {
   // root event
   rootNode = currNode = new GCEventNode(ROOT_EVENT_NAME, 0, null, this);
 
-  for (len = m.length; this.pos < len; this.pos++) {
+  for (var len = m.length; this.pos < len; this.pos++) {
     char = m[this.pos];
     if ('[' == char) {
       var startPos = this.pos;
 
       // skip '[' for parsing event name
       this.pos++;
-      eventName = this.parseEventName();
+      var eventName = this.parseEventName();
       currNode = new GCEventNode(eventName, startPos, currNode, this);
     } else if (']' == char) {
       currNode.endPos = this.pos;
@@ -167,10 +174,9 @@ var LENGTH_OF_DATESTAMP = 28;
 MessageParser.prototype.parseDateStamp = function() {
   var m = this.message;
   if (m[4] == '-' && m[7] == '-') {
-    // TODO: validate the date with a regular expression
     var date = new Date(m.substring(0, LENGTH_OF_DATESTAMP));
     if (date) {
-      this.datestamp = n.substring(0, LENGTH_OF_DATESTAMP - 5) + 'Z';
+      this.datestamp = date;
       // pass the following ": "
       this.pos = LENGTH_OF_DATESTAMP + 2;
     }
@@ -267,8 +273,10 @@ function recordMemoryInfo(memoryInfo, beatEvent) {
   }
 }
 
-function recordPauseTime(pauseTime, beatEvent) {
-  beatEvent.Put(ECS_PAUSE_TIME, pauseTime);
+function recordPauseTime(pauseTime, beatEvent, ecsField) {
+  if (pauseTime) {
+    beatEvent.Put(ecsField, pauseTime);
+  }
 }
 
 // 0: 48 9: 57
