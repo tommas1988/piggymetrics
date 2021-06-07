@@ -8,12 +8,12 @@ var ECS_MEMORY_YOUNG_TOTAL = 'GC4j.Memory.Young.Total';
 var ECS_MEMORY_TENURED_BEFORE_GC = 'GC4j.Memory.Tenured.BeforeGC';
 var ECS_MEMORY_TENURED_AFTER_GC = 'GC4j.Memory.Tenured.AfterGC';
 var ECS_MEMORY_TENURED_TOTAL = 'GC4j.Memory.Tenured.Total';
+var ECS_MEMORY_PERM_BEFORE_GC = 'GC4j.Memory.Perm.BeforeGC';
+var ECS_MEMORY_PERM_AFTER_GC = 'GC4j.Memory.Perm.AfterGC';
+var ECS_MEMORY_PERM_TOTAL = 'GC4j.Memory.Perm.Total';
 var ECS_MEMORY_HEAP_BEFORE_GC = 'GC4j.Memory.Heap.BeforeGC';
 var ECS_MEMORY_HEAP_AFTER_GC = 'GC4j.Memory.Heap.AfterGC';
 var ECS_MEMORY_HEAP_TOTAL = 'GC4j.Memory.Heap.Total';
-var ECS_MEMORY_METASPACE_BEFORE_GC = 'GC4j.Memory.Metaspace.BeforeGC';
-var ECS_MEMORY_METASPACE_AFTER_GC = 'GC4j.Memory.Metaspace.AfterGC';
-var ECS_MEMORY_METASPACE_TOTAL = 'GC4j.Memory.Metaspace.Total';
 var ECS_YOUNG_PAUSE_TIME = 'GC4j.PauseTime.Young';
 var ECS_TENURED_PAUSE_TIME = 'GC4j.PauseTime.Tenured';
 var ECS_TOTAL_PAUSE_TIME = 'GC4j.PauseTime.Total';
@@ -26,7 +26,7 @@ var GC_TYPE_FULL = 'full';
 var MEMORY_HEAP = 'heap'
 var MEMORY_YOUNG = 'young';
 var MEMORY_TENURED = 'tenured';
-var MEMORY_METASPACE = 'metaspace';
+var MEMORY_PERM = 'metaspace';
 
 // canonical name => void processor(BeatEvent, GCEventNode)
 var GC_EVENT_PROCESSORS = {};
@@ -94,7 +94,7 @@ var ROOT_EVENT_NAME = '__ROOT__';
   // METASPACE / PERM GC
 
   GC_EVENT_PROCESSORS['Metaspace'] = function(beatEvent, gcEventNode) {
-    recordMemoryInfo(parseMemory(gcEventNode.text(), MEMORY_METASPACE), beatEvent);
+    recordMemoryInfo(parseMemory(gcEventNode.text(), MEMORY_PERM), beatEvent);
   };
 })();
 
@@ -273,10 +273,10 @@ function recordMemoryInfo(memoryInfo, beatEvent) {
     beforeGCKey = ECS_MEMORY_TENURED_BEFORE_GC;
     afterGCKey = ECS_MEMORY_TENURED_AFTER_GC;
     totalGCKey = ECS_MEMORY_TENURED_TOTAL;
-  } else if (memoryInfo.type == MEMORY_METASPACE) {
-    beforeGCKey = ECS_MEMORY_METASPACE_BEFORE_GC;
-    afterGCKey = ECS_MEMORY_METASPACE_AFTER_GC;
-    totalGCKey = ECS_MEMORY_METASPACE_TOTAL;
+  } else if (memoryInfo.type == MEMORY_PERM) {
+    beforeGCKey = ECS_MEMORY_PERM_BEFORE_GC;
+    afterGCKey = ECS_MEMORY_PERM_AFTER_GC;
+    totalGCKey = ECS_MEMORY_PERM_TOTAL;
   } else {
     beforeGCKey = ECS_MEMORY_HEAP_BEFORE_GC;
     afterGCKey = ECS_MEMORY_HEAP_AFTER_GC;

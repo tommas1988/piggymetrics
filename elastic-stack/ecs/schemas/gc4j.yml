@@ -1,0 +1,93 @@
+- name: GC4j
+  title: fields for java gc log
+  description: fields for java gc log
+  fields:
+    - name: GCType
+      level: extended
+      type: keyword
+      example: minor
+      description: 'minor' as young generation gc, 'major' as tenured generation gc, 'full' as full gc
+
+    - name: Timestamp
+      level: extended
+      type: double
+      example: 2.124
+      description: timestamp relative to the JVM start time when a garbage collection occurs.
+
+    - name: Memory.Young.BeforeGC
+      level: extended
+      type: long
+      example: 36231
+      description: memory size(kb) of young generation before gc occurs.
+
+    - name: GC4j.Memory.Young.AfterGC
+      level: extended
+      type: long
+      example: 36231
+      description: memory size(kb) of young generation after gc.
+
+    - name: Memory.Young.Total
+      level: extended
+      type: long
+      example: 36231
+      description: memory size(kb) of young generation.
+
+    - name: Memory.Tenured.BeforeGC
+      level: extended
+      type: long
+      example: 36231
+      description: memory size(kb) of tenured generation before gc occurs.
+
+    - name: GC4j.Memory.Tenured.AfterGC
+      level: extended
+      type: long
+      example: 36231
+      description: memory size(kb) of tenured generation after gc.
+
+    - name: Memory.Tenured.Total
+      level: extended
+      type: long
+      example: 36231
+      description: memory size(kb) of tenured generation.
+
+    - name: Memory.Perm.BeforeGC
+      level: extended
+      type: long
+      example: 36231
+      description: memory size(kb) of permanent or metaspace generation before gc occurs.
+
+    - name: GC4j.Memory.Perm.AfterGC
+      level: extended
+      type: long
+      example: 36231
+      description: memory size(kb) of permanent or metaspace generation after gc.
+
+    - name: Memory.Perm.Total
+      level: extended
+      type: long
+      example: 36231
+      description: memory size(kb) of permanent or metaspace generation.
+
+    - name: Memory.Heap.BeforeGC
+      level: extended
+      type: long
+      example: 36231
+      description: memory size(kb) of heap before gc occurs.
+
+    - name: GC4j.Memory.Heap.AfterGC
+      level: extended
+      type: long
+      example: 36231
+      description: memory size(kb) of heap generation after gc.
+
+    - name: Memory.Heap.Total
+      level: extended
+      type: long
+      example: 36231
+      description: memory size(kb) of heap generation.
+
+    - name: PauseTime.Young
+      level: extended
+      type: double
+      example: 0.0002468
+      description: gc pause time in seconds
