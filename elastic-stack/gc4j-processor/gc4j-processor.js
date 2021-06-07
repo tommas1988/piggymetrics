@@ -17,6 +17,11 @@ var ECS_MEMORY_METASPACE_TOTAL = 'GC4j.Memory.Metaspace.Total';
 var ECS_YOUNG_PAUSE_TIME = 'GC4j.PauseTime.Young';
 var ECS_TENURED_PAUSE_TIME = 'GC4j.PauseTime.Tenured';
 var ECS_TOTAL_PAUSE_TIME = 'GC4j.PauseTime.Total';
+var ECS_GC_TYPE = 'GC4j.GCType';
+
+var GC_TYPE_MINOR = 'minor';
+var GC_TYPE_MAJOR = 'major';
+var GC_TYPE_FULL = 'full';
 
 var MEMORY_HEAP = 'heap'
 var MEMORY_YOUNG = 'young';
@@ -45,12 +50,16 @@ var ROOT_EVENT_NAME = '__ROOT__';
     var content = gcEventNode.parser.message.substring(startPos, gcEventNode.endPos);
     recordMemoryInfo(parseMemory(content, MEMORY_HEAP), beatEvent);
     recordPauseTime(parsePauseTime(content), beatEvent, ECS_TOTAL_PAUSE_TIME);
+
+    var gcType = childNodes.length > 0 && childNodes[0].gcType;
+    recordGCType(gcType ? gcType : GC_TYPE_MINOR, beatEvent);
   };
 
   GC_EVENT_PROCESSORS['Full GC'] = function(beatEvent, gcEventNode) {
     var content = gcEventNode.text();
     recordMemoryInfo(parseMemory(content, MEMORY_HEAP), beatEvent);
     recordPauseTime(parsePauseTime(content), beatEvent, ECS_TOTAL_PAUSE_TIME);
+    recordGCType(GC_TYPE_FULL, beatEvent);
   };
 
   // YOUNG GC
@@ -58,21 +67,32 @@ var ROOT_EVENT_NAME = '__ROOT__';
     var content = gcEventNode.text();
     recordMemoryInfo(parseMemory(content, MEMORY_YOUNG), beatEvent);
     recordPauseTime(parsePauseTime(content), beatEvent, ECS_YOUNG_PAUSE_TIME);
+
+    gcEventNode.gcType = GC_TYPE_MINOR;
   };
   GC_EVENT_PROCESSORS['ParNew'] = youngGCProcessor;
   GC_EVENT_PROCESSORS['DefNew'] = youngGCProcessor;
+  GC_EVENT_PROCESSORS['PSYoungGen'] = youngGCProcessor;
 
   // TENURED GC
+
   var tenuredGCProcessor = function(beatEvent, gcEventNode) {
     var content = gcEventNode.text();
     recordMemoryInfo(parseMemory(content, MEMORY_TENURED), beatEvent);
     recordPauseTime(parsePauseTime(content), beatEvent, ECS_TENURED_PAUSE_TIME);
+
+    gcEventNode.gcType = GC_TYPE_MAJOR;
   };
+
+  // CMS GC
   GC_EVENT_PROCESSORS['CMS-initial-mark'] = tenuredGCProcessor;
   GC_EVENT_PROCESSORS['CMS-remark'] = tenuredGCProcessor;
   GC_EVENT_PROCESSORS['CMS'] = tenuredGCProcessor;
 
+  GC_EVENT_PROCESSORS['ParOldGen'] = tenuredGCProcessor;
+
   // METASPACE / PERM GC
+
   GC_EVENT_PROCESSORS['Metaspace'] = function(beatEvent, gcEventNode) {
     recordMemoryInfo(parseMemory(gcEventNode.text(), MEMORY_METASPACE), beatEvent);
   };
@@ -205,6 +225,7 @@ function GCEventNode(name, startPos, parent, parser) {
   this.parent = parent;
   this.parser = parser;
   this.children = [];
+  this.gcType;
 
   if (parent) {
     parent.children.push(this);
@@ -276,6 +297,12 @@ function recordMemoryInfo(memoryInfo, beatEvent) {
 function recordPauseTime(pauseTime, beatEvent, ecsField) {
   if (pauseTime) {
     beatEvent.Put(ecsField, pauseTime);
+  }
+}
+
+function recordGCType(gcType, beatEvent) {
+  if (gcType) {
+    beatEvent.Put(ECS_GC_TYPE, gcType);
   }
 }
 
