@@ -1,0 +1,31 @@
+filebeat.inputs:
+- type: log
+  paths:
+  - "gc.log"
+  multiline:
+    type: pattern
+    pattern: '^\d'
+    match: after
+    negate: true
+
+  processors:
+  - script:
+      lang: javascript
+      id: gc4j
+      tag_on_exception: parse_error
+      file: ${path.config}/gc4j-processor.js
+
+output:
+  elasticsearch:
+    hosts: ["http://127.0.0.1:9200"]
+    enabled: true
+    indices:
+      - index: gc4j-test
+
+setup:
+  kibana.host: "http://127.0.0.1:5601"
+  ilm.enabled: false
+  # ilm.policy_file: ${path.config}/gc4j-ilm-policy.json
+  # template.json.enabled: true
+  # template.json.path: ${path.config}/gc4j-index-template.json
+  # template.json.name: gc4j-template

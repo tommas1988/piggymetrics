@@ -1,3 +1,4 @@
+---
 - name: GC4j
   title: fields for java gc log
   description: fields for java gc log
@@ -6,7 +7,8 @@
       level: extended
       type: keyword
       example: minor
-      description: 'minor' as young generation gc, 'major' as tenured generation gc, 'full' as full gc
+      description: >
+        'minor' as young generation gc, 'major' as tenured generation gc, 'full' as full gc
 
     - name: Timestamp
       level: extended

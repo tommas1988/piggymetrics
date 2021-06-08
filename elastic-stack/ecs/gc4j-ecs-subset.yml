@@ -1,0 +1,12 @@
+name: gc4j-ecs-subset
+fields:
+  base:
+    fields:
+      "@timestamp": {}
+      "message": {}
+  ecs:
+    fields: "*"
+  error:
+    fields: "*"
+  GC4j:
+    fields: "*"

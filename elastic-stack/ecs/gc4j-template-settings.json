@@ -1,0 +1,10 @@
+{
+  "index_patterns": ["gc4j*"],
+  "order": 1,
+  "data_stream": { },
+  "settings": {
+    "number_of_shards": 1,
+    "number_of_replicas": 1,
+    "index.lifecycle.name": "gc4j_policy"
+  }
+}
