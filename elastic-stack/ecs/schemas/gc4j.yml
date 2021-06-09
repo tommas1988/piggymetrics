@@ -22,7 +22,7 @@
       example: 36231
       description: memory size(kb) of young generation before gc occurs.
 
-    - name: GC4j.Memory.Young.AfterGC
+    - name: Memory.Young.AfterGC
       level: extended
       type: long
       example: 36231
@@ -40,7 +40,7 @@
       example: 36231
       description: memory size(kb) of tenured generation before gc occurs.
 
-    - name: GC4j.Memory.Tenured.AfterGC
+    - name: Memory.Tenured.AfterGC
       level: extended
       type: long
       example: 36231
@@ -58,7 +58,7 @@
       example: 36231
       description: memory size(kb) of permanent or metaspace generation before gc occurs.
 
-    - name: GC4j.Memory.Perm.AfterGC
+    - name: Memory.Perm.AfterGC
       level: extended
       type: long
       example: 36231
@@ -76,7 +76,7 @@
       example: 36231
       description: memory size(kb) of heap before gc occurs.
 
-    - name: GC4j.Memory.Heap.AfterGC
+    - name: Memory.Heap.AfterGC
       level: extended
       type: long
       example: 36231

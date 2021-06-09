@@ -1,9 +1,12 @@
 PUT _index_template/gc4j-template
 {
+# TODO: a better name pattern
+# https://www.elastic.co/guide/en/fleet/7.13/data-streams.html#data-streams-naming-scheme
   "index_patterns": [
     "gc4j*"
   ],
-  "priority": 1,
+# https://www.elastic.co/guide/en/elasticsearch/reference/7.13/index-templates.html#avoid-index-pattern-collisions
+  "priority": 500,
   "data_stream": {},
   "template": {
     "settings": {
@@ -31,42 +34,6 @@ PUT _index_template/gc4j-template
         },
         "GC4j": {
           "properties": {
-            "GC4j": {
-              "properties": {
-                "Memory": {
-                  "properties": {
-                    "Heap": {
-                      "properties": {
-                        "AfterGC": {
-                          "type": "long"
-                        }
-                      }
-                    },
-                    "Perm": {
-                      "properties": {
-                        "AfterGC": {
-                          "type": "long"
-                        }
-                      }
-                    },
-                    "Tenured": {
-                      "properties": {
-                        "AfterGC": {
-                          "type": "long"
-                        }
-                      }
-                    },
-                    "Young": {
-                      "properties": {
-                        "AfterGC": {
-                          "type": "long"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            },
             "GCType": {
               "ignore_above": 1024,
               "type": "keyword"
@@ -75,6 +42,9 @@ PUT _index_template/gc4j-template
               "properties": {
                 "Heap": {
                   "properties": {
+                    "AfterGC": {
+                      "type": "long"
+                    },
                     "BeforeGC": {
                       "type": "long"
                     },
@@ -85,6 +55,9 @@ PUT _index_template/gc4j-template
                 },
                 "Perm": {
                   "properties": {
+                    "AfterGC": {
+                      "type": "long"
+                    },
                     "BeforeGC": {
                       "type": "long"
                     },
@@ -95,6 +68,9 @@ PUT _index_template/gc4j-template
                 },
                 "Tenured": {
                   "properties": {
+                    "AfterGC": {
+                      "type": "long"
+                    },
                     "BeforeGC": {
                       "type": "long"
                     },
@@ -105,6 +81,9 @@ PUT _index_template/gc4j-template
                 },
                 "Young": {
                   "properties": {
+                    "AfterGC": {
+                      "type": "long"
+                    },
                     "BeforeGC": {
                       "type": "long"
                     },
