@@ -98,6 +98,12 @@ PUT _index_template/gc4j-template
               "properties": {
                 "Young": {
                   "type": "double"
+                },
+                "Tenured": {
+                  "type": "double"
+                },
+                "Total": {
+                  "type": "double"
                 }
               }
             },

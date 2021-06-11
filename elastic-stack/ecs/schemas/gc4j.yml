@@ -93,3 +93,15 @@
       type: double
       example: 0.0002468
       description: gc pause time in seconds
+
+    - name: PauseTime.Tenured
+      level: extended
+      type: double
+      example: 0.0002468
+      description: gc pause time in seconds
+
+    - name: PauseTime.Total
+      level: extended
+      type: double
+      example: 0.0002468
+      description: gc pause time in seconds
