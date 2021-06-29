@@ -1,0 +1,215 @@
+{
+  "version": "7.10.1",
+  "objects": [
+    {
+      "id": "Filebeat-Java-GC-Dashboard",
+      "type": "dashboard",
+      "namespaces": [
+        "default"
+      ],
+      "updated_at": "2021-06-15T14:56:15.268Z",
+      "version": "1",
+      "attributes": {
+        "title": "[Filebeat Java GC] Overview",
+        "hits": 0,
+        "description": "",
+        "panelsJSON": "[{\"version\":\"7.10.1\",\"gridData\":{\"x\":0,\"y\":0,\"w\":24,\"h\":15,\"i\":\"1\"},\"panelIndex\":\"1\",\"embeddableConfig\":{},\"panelRefName\":\"heapsize-lens\"}]",
+        "optionsJSON": "{\"hidePanelTitles\":false,\"useMargins\":true}",
+        "version": 1,
+        "timeRestore": false,
+        "kibanaSavedObjectMeta": {
+          "searchSourceJSON": "{\"query\":{\"language\":\"kuery\",\"query\":\"\"},\"filter\":[]}"
+        }
+      },
+      "references": [
+        {
+          "name": "heapsize-lens",
+          "type": "lens",
+          "id": "Filebeat-Java-heapsize-lens"
+        }
+      ],
+      "migrationVersion": {
+        "dashboard": "7.9.3"
+      }
+    },
+    {
+      "id": "Filebeat-Java-heapsize-lens",
+      "type": "lens",
+      "namespaces": [
+        "default"
+      ],
+      "updated_at": "2021-06-15T14:35:14.380Z",
+      "version": "1",
+      "attributes": {
+        "title": "Heap Memory Size",
+        "description": "",
+        "visualizationType": "lnsXY",
+        "state": {
+          "datasourceStates": {
+            "indexpattern": {
+              "layers": {
+                "Filebeat-Java-heapsize-layer": {
+                  "columns": {
+                    "Filebeat-Java-heapsize-timestamp": {
+                      "label": "@timestamp",
+                      "dataType": "date",
+                      "operationType": "date_histogram",
+                      "suggestedPriority": 1,
+                      "sourceField": "@timestamp",
+                      "isBucketed": true,
+                      "scale": "interval",
+                      "params": {
+                        "interval": "100ms"
+                      }
+                    },
+                    "Filebeat-Java-heapsize-total": {
+                      "label": "Heap Total Size",
+                      "dataType": "number",
+                      "operationType": "avg",
+                      "sourceField": "GC4j.Memory.Heap.Total",
+                      "isBucketed": false,
+                      "scale": "ratio",
+                      "customLabel": true
+                    },
+                    "Filebeat-Java-heapsize-before-gc": {
+                      "label": "Heap Size Before GC",
+                      "dataType": "number",
+                      "operationType": "avg",
+                      "sourceField": "GC4j.Memory.Heap.BeforeGC",
+                      "isBucketed": false,
+                      "scale": "ratio",
+                      "customLabel": true
+                    },
+                    "Filebeat-Java-heapsize-after-gc": {
+                      "label": "Heap Size After GC",
+                      "dataType": "number",
+                      "operationType": "avg",
+                      "sourceField": "GC4j.Memory.Heap.AfterGC",
+                      "isBucketed": false,
+                      "scale": "ratio",
+                      "customLabel": true
+                    },
+                    "Filebeat-Java-heapsize-tenured-total": {
+                      "label": "Tenured Total Size",
+                      "dataType": "number",
+                      "operationType": "avg",
+                      "sourceField": "GC4j.Memory.Tenured.Total",
+                      "isBucketed": false,
+                      "scale": "ratio",
+                      "customLabel": true
+                    },
+                    "Filebeat-Java-heapsize-tenured-before-gc": {
+                      "label": "Tenured Size Before GC",
+                      "dataType": "number",
+                      "operationType": "avg",
+                      "sourceField": "GC4j.Memory.Tenured.BeforeGC",
+                      "isBucketed": false,
+                      "scale": "ratio",
+                      "customLabel": true
+                    },
+                    "Filebeat-Java-heapsize-tenured-after-gc": {
+                      "label": "Tenured Size After GC",
+                      "dataType": "number",
+                      "operationType": "avg",
+                      "sourceField": "GC4j.Memory.Tenured.AfterGC",
+                      "isBucketed": false,
+                      "scale": "ratio",
+                      "customLabel": true
+                    },
+                    "Filebeat-Java-heapsize-young-total": {
+                      "label": "Young Total Size",
+                      "dataType": "number",
+                      "operationType": "avg",
+                      "sourceField": "GC4j.Memory.Young.Total",
+                      "isBucketed": false,
+                      "scale": "ratio",
+                      "customLabel": true
+                    },
+                    "Filebeat-Java-heapsize-young-before-gc": {
+                      "label": "Young Size Before GC",
+                      "dataType": "number",
+                      "operationType": "avg",
+                      "sourceField": "GC4j.Memory.Young.BeforeGC",
+                      "isBucketed": false,
+                      "scale": "ratio",
+                      "customLabel": true
+                    },
+                    "Filebeat-Java-heap-size-young-after-gc": {
+                      "label": "Young Size After GC",
+                      "dataType": "number",
+                      "operationType": "avg",
+                      "sourceField": "GC4j.Memory.Young.AfterGC",
+                      "isBucketed": false,
+                      "scale": "ratio",
+                      "customLabel": true
+                    }
+                  },
+                  "columnOrder": [
+                    "Filebeat-Java-heapsize-timestamp",
+                    "Filebeat-Java-heapsize-total",
+                    "Filebeat-Java-heapsize-before-gc",
+                    "Filebeat-Java-heapsize-after-gc",
+                    "Filebeat-Java-heapsize-tenured-total",
+                    "Filebeat-Java-heapsize-tenured-before-gc",
+                    "Filebeat-Java-heapsize-tenured-after-gc",
+                    "Filebeat-Java-heapsize-young-total",
+                    "Filebeat-Java-heapsize-young-before-gc",
+                    "Filebeat-Java-heap-size-young-after-gc"
+                  ]
+                }
+              }
+            }
+          },
+          "visualization": {
+            "title": "Empty XY chart",
+            "legend": {
+              "isVisible": true,
+              "position": "right"
+            },
+            "preferredSeriesType": "area",
+            "layers": [
+              {
+                "layerId": "Filebeat-Java-heapsize-layer",
+                "accessors": [
+                  "Filebeat-Java-heapsize-total",
+                  "Filebeat-Java-heapsize-before-gc",
+                  "Filebeat-Java-heapsize-after-gc",
+                  "Filebeat-Java-heapsize-tenured-total",
+                  "Filebeat-Java-heapsize-tenured-before-gc",
+                  "Filebeat-Java-heapsize-tenured-after-gc",
+                  "Filebeat-Java-heapsize-young-total",
+                  "Filebeat-Java-heapsize-young-before-gc",
+                  "Filebeat-Java-heap-size-young-after-gc"
+                ],
+                "position": "top",
+                "seriesType": "area",
+                "showGridlines": false,
+                "xAccessor": "Filebeat-Java-heapsize-timestamp"
+              }
+            ]
+          },
+          "query": {
+            "query": "",
+            "language": "kuery"
+          },
+          "filters": []
+        }
+      },
+      "references": [
+        {
+          "type": "index-pattern",
+          "id": "gc4j-*",
+          "name": "indexpattern-datasource-current-indexpattern"
+        },
+        {
+          "type": "index-pattern",
+          "id": "gc4j-*",
+          "name": "indexpattern-datasource-layer-Filebeat-Java-heapsize-layer"
+        }
+      ],
+      "migrationVersion": {
+        "lens": "7.10.0"
+      }
+    }
+  ]
+}
