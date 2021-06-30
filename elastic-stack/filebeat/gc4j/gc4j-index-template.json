@@ -1,6 +1,6 @@
 {
   "index_patterns": [
-    "gc4j*"
+    "gc4j-*"
   ],
   "priority": 1,
   "data_stream": {},

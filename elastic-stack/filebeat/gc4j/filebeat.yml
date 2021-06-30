@@ -25,3 +25,6 @@ output:
 setup:
   kibana.host: "http://127.0.0.1:5601"
   ilm.enabled: false
+  dashboards:
+    enabled: true
+    directory: ${path.config}/kibana/
