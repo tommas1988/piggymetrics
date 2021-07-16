@@ -8,5 +8,6 @@ fields:
     fields: "*"
   error:
     fields: "*"
+  service: "*"
   GC4j:
     fields: "*"

@@ -28,6 +28,12 @@ var MEMORY_YOUNG = 'young';
 var MEMORY_TENURED = 'tenured';
 var MEMORY_PERM = 'metaspace';
 
+var gcTypeMapper = {
+  GC_TYPE_MINOR: 'Minor GC',
+  GC_TYPE_MAJOR: 'Major GC',
+  GC_TYPE_FULL: 'Full GC'
+};
+
 // canonical name => void processor(BeatEvent, GCEventNode)
 var GC_EVENT_PROCESSORS = {};
 
@@ -302,7 +308,7 @@ function recordPauseTime(pauseTime, beatEvent, ecsField) {
 
 function recordGCType(gcType, beatEvent) {
   if (gcType) {
-    beatEvent.Put(ECS_GC_TYPE, gcType);
+    beatEvent.Put(ECS_GC_TYPE, gcTypeMapper[gcType]);
   }
 }
 
