@@ -4,11 +4,11 @@
 ``` sh
 cd ${path_of_ecs}
 $ build/ve/bin/python scripts/generator.py \
->    --template-settings ${current-dir}/gc4j-template-settings.json \
->    --subset ${current-dir}/gc4j-ecs-subset.yml \
->    --include ${current-dir}/schemas/ \
->    --out ${current-dir}/out/gc4j/ \
->    --strict
+    --template-settings ${current_dir}/gc4j-template-settings.json \
+    --subset ${current_dir}/gc4j-ecs-subset.yml \
+    --include ${current_dir}/schemas/ \
+    --out ${current_dir}/out/gc4j/ \
+    --strict
 ```
 
 Modify the generated file in ${current-dir}/out/gc4j/generated/elasticsearch/7/template.json to satisfy index template api after elasticsearch 7.8

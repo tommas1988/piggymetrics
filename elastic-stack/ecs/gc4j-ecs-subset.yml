@@ -8,6 +8,9 @@ fields:
     fields: "*"
   error:
     fields: "*"
-  service: "*"
+  service:
+    fields:
+      "id": {}
+      "name": {}
   GC4j:
     fields: "*"
