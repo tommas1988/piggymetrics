@@ -156,7 +156,19 @@ PUT _index_template/gc4j-template
           "norms": false,
           "type": "text"
         }
-      }
+      },
+      "service": {
+          "properties": {
+            "node": {
+              "properties": {
+                "name": {
+                  "ignore_above": 1024,
+                  "type": "keyword"
+                }
+              }
+            }
+          }
+        }
     }
   }
 }

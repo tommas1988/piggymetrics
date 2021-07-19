@@ -10,5 +10,7 @@ fields:
     fields: "*"
   error:
     fields: "*"
-  trace:
+  tracing:
+    fields: "*"
+  service:
     fields: "*"

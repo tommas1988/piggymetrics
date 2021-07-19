@@ -13,6 +13,8 @@ filebeat.inputs:
       lang: javascript
       id: gc4j
       tag_on_exception: parse_error
+      params:
+        # service_node_name: ${SERVICE_NODE_NAME}
       file: ${path.config}/gc4j-processor/gc4j-processor.js
 
 output:

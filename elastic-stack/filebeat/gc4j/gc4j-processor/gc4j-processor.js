@@ -1,4 +1,6 @@
+// arguments register from filebeat config
 var debug = false;
+var serviceNodeName;
 
 // ecs field names
 var ECS_TIMESTAMP = 'GC4j.Timestamp';
@@ -28,11 +30,7 @@ var MEMORY_YOUNG = 'young';
 var MEMORY_TENURED = 'tenured';
 var MEMORY_PERM = 'metaspace';
 
-var gcTypeMapper = {
-  GC_TYPE_MINOR: 'Minor GC',
-  GC_TYPE_MAJOR: 'Major GC',
-  GC_TYPE_FULL: 'Full GC'
-};
+var gcTypeMapper = {};
 
 // canonical name => void processor(BeatEvent, GCEventNode)
 var GC_EVENT_PROCESSORS = {};
@@ -41,6 +39,10 @@ var ROOT_EVENT_NAME = '__ROOT__';
 
 // INIT
 (function() {
+  gcTypeMapper[GC_TYPE_MINOR] = 'Minor GC';
+  gcTypeMapper[GC_TYPE_MAJOR] = 'Major GC';
+  gcTypeMapper[GC_TYPE_FULL] = 'Full GC';
+
   GC_EVENT_PROCESSORS[ROOT_EVENT_NAME] = function(beatEvent, gcEventNode) {
     var parser = gcEventNode.parser;
     if (parser.datestamp) {
@@ -105,13 +107,14 @@ var ROOT_EVENT_NAME = '__ROOT__';
 })();
 
 // PROCESSOR API IMPLAMENTATIONS
-
 function register(params) {
   debug = !!(params.debug);
+  serviceNodeName = params.service_node_name;
 }
 
 function process(event) {
   new MessageParser(event.Get('message')).parse(event);
+  event.Put('service.node.name', serviceNodeName);
 }
 
 function MessageParser(message) {

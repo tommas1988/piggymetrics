@@ -1,11 +1,11 @@
 {
-  "index_patterns": ["gc4j*"],
+  "index_patterns": ["service-log-*"],
   "order": 1,
   "priority": 500,
   "data_stream": { },
   "template": {
     "settings": {
-      "index.lifecycle.name": "gc4j-ilm-policy",
+      "index.lifecycle.name": "service-log-ilm-policy",
       "number_of_replicas": 1,
       "number_of_shards": 1
     }

@@ -10,7 +10,8 @@ fields:
     fields: "*"
   service:
     fields:
-      "id": {}
-      "name": {}
+      node:
+        fields:
+          "name": {}
   GC4j:
     fields: "*"
