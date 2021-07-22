@@ -1,4 +1,4 @@
-version: '2.1'
+version: '3.9'
 services:
   rabbitmq:
     image: rabbitmq:3-management
@@ -44,7 +44,7 @@ services:
       config:
         condition: service_healthy
     ports:
-      - 80:4000
+      - 8080:8080
     logging:
       options:
         max-size: "10m"

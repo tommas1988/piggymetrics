@@ -19,7 +19,6 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<spring-cloud.version>Finchley.RELEASE</spring-cloud.version>
 		<java.version>1.8</java.version>
-		<ecs-logging-java.version>1.0.0.RC1</ecs-logging-java.version>
 	</properties>
 
 	<dependencyManagement>
@@ -58,7 +57,8 @@
 		<module>notification-service</module>
 		<module>turbine-stream-service</module>
 		<module>zipkin-apm</module>
-		<!--<module>zipkin-apm-bom</module>-->
+        <module>base</module>
+        <!--<module>zipkin-apm-bom</module>-->
 	</modules>
 
 </project>
